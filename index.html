@@ -3,248 +3,385 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Anonymous Demo</title>
+  <title>Visually-Guided Spatial Audio Generation for 360◦ In-the-Wild Speech Scenes</title>
 
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
 
   <style>
-    body{font-family:Arial, sans-serif; max-width:1200px; margin:0 auto; padding:28px; background:#fff; color:#111;}
-    h1{margin:0 0 10px; text-align:center;}
-    .note{margin:14px 0 18px; text-align:center; font-size:16px;}
-    .grid{display:grid; grid-template-columns: repeat(4, 1fr); gap:14px;}
-    .cell{border:1px solid #e6e6e6; border-radius:14px; padding:10px; background:#fff;}
-    .head{font-weight:700; text-align:center; margin-bottom:8px;}
-    .btn{width:100%; border:1px solid #ddd; background:#fff; padding:10px 12px; border-radius:10px; cursor:pointer;}
+    body{
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px;
+      background: #fff;
+      color: #111;
+    }
+    h1{margin: 0 0 10px; text-align:center; font-size: 26px;}
+    .authors{ text-align:center; color:#444; margin-bottom: 14px; }
+    .top{
+      display:grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 14px;
+      align-items: start;
+      margin-bottom: 18px;
+    }
+    .card{
+      border: 1px solid #e6e6e6;
+      border-radius: 14px;
+      padding: 14px;
+      background: #fff;
+    }
+    .card h2{margin: 0 0 8px; font-size: 16px;}
+    .note{
+      margin: 14px 0 18px;
+      text-align:center;
+      font-size: 15px;
+    }
+    .note small{display:block; color:#666; margin-top: 6px;}
+    img{width:100%; border-radius: 12px; border: 1px solid #eee;}
+    table{
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    th, td{
+      border-top: 1px solid #eee;
+      padding: 10px;
+      vertical-align: top;
+      text-align: center;
+    }
+    th{
+      font-size: 13px;
+      color:#333;
+      background: #fafafa;
+      border-top: 1px solid #e6e6e6;
+    }
+    .col-video{width: 38%;}
+    .col-audio{width: 20.5%;}
+    .viewer{
+      border: 1px solid #eee;
+      border-radius: 12px;
+      overflow: hidden;
+      height: 220px;
+    }
+    a-scene{height: 220px; width: 100%;}
+    .rowtitle{
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-align:left;
+      font-size: 13px;
+      color:#222;
+    }
+    .btn{
+      border: 1px solid #ddd;
+      background: #fff;
+      padding: 8px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      width: 100%;
+    }
     .btn:hover{background:#f7f7f7;}
-    .rowbtn{display:flex; gap:8px; margin-top:8px;}
-    .btn2{flex:1; border:1px solid #ddd; background:#fff; padding:8px 10px; border-radius:10px; cursor:pointer; font-size:13px;}
-    .btn2:hover{background:#f7f7f7;}
-    .aframe-wrap{height:240px;}
-    a-scene{height:240px; width:100%;}
-    .tiny{font-size:12px; color:#666; margin-top:8px; text-align:center;}
+    .btnrow{display:flex; gap:8px; margin-top: 8px;}
+    .btnmini{
+      flex:1;
+      border: 1px solid #ddd;
+      background: #fff;
+      padding: 7px 8px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .btnmini:hover{background:#f7f7f7;}
+    .tiny{font-size: 11px; color:#666; margin-top: 6px;}
+    .footer{margin-top: 14px; font-size: 12px; color:#666;}
   </style>
 
+  <!-- 360 viewer -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <!-- Omnitone -->
   <script src="https://www.gstatic.com/external_hosted/omnitone/build/omnitone.min.js"></script>
 </head>
 
 <body>
   <h1>Visually-Guided Spatial Audio Demo</h1>
+  <div class="authors">Anonymous Authors</div>
+
+  <div class="top">
+    <div class="card">
+      <h2>Abstract</h2>
+      <div style="line-height:1.5; font-size:13px; color:#222;">
+        Spatial audio is a key component of immersive $360^\circ$ media, yet high-quality spatial capture remains limited in real-world speech-dominant scenes. This paper studies visually guided First-Order Ambisonics (FOA) speech spatialization in the wild: given aligned $360^\circ$ video and an omnidirectional audio track, the goal is to reconstruct coherent spatial audio that remains stable under viewpoint changes. To support this task, we introduce YT-SPEECH, a speech-oriented $360^\circ$ video-FOA dataset curated from YouTube. We propose a two-stage localizer-renderer framework, where an audio-visual model provides spatial priors and a conditional complex-domain U-Net reconstructs directional FOA signals from the omnidirectional input. A confidence-based gating strategy further stabilizes conditioning under ambiguous acoustic conditions. Experimental results demonstrate improved reconstruction fidelity, spatial accuracy, and speech perceptual quality.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Framework</h2>
+      <img src="framework.png" alt="framework"/>
+      <div class="tiny">Figure: Overview of the proposed framework.</div>
+    </div>
+  </div>
 
   <div class="note">
     🎧 <b>Please wear headphones and drag the screen to experience the 360-degree audio</b> 🎥
-    <div style="font-size:12px;color:#666;margin-top:6px;">
-      Tip: If the clip is too short, click “Auto-pan test” to hear a clear left-right sweep.
-    </div>
+    <small>Tip: “Auto-pan test” makes the rotation effect obvious even for 5s clips.</small>
   </div>
 
-  <!-- ======= EDIT ONLY THESE PATHS ======= -->
-  <script>
-    const VER = "v1"; // bump if caching
-    const VIDEO_SRC = "videos/Gb24E-LqZyE_31.webm?" + VER;
-
-    const AUDIO_GT   = "audios/Gb24E-LqZyE_31_gt.wav?" + VER;
-    const AUDIO_B1   = "audios/Gb24E-LqZyE_31_pred.wav?" + VER;
-    const AUDIO_B2   = "audios/Gb24E-LqZyE_31_pred.wav?" + VER;
-    const AUDIO_OURS = "audios/Gb24E-LqZyE_31_pred.wav?" + VER;
-
-    // flip if you feel rotation direction is reversed
-    const ROT_SIGN = -1;
-  </script>
-  <!-- ===================================== -->
-
-  <div class="grid">
-    <div class="cell" id="cell-gt">
-      <div class="head">GT</div>
-      <button class="btn" id="btn-gt">Play / Resume</button>
-      <div class="rowbtn">
-        <button class="btn2" id="auto-gt">Auto-pan test</button>
-        <button class="btn2" id="stop-gt">Stop</button>
-      </div>
-      <div class="aframe-wrap" style="margin-top:10px;">
-        <a-scene embedded vr-mode-ui="enabled:true" style="height:240px; width:100%;">
-          <a-assets>
-            <video id="v-gt" crossorigin="anonymous" playsinline webkit-playsinline preload="auto"></video>
-          </a-assets>
-          <a-videosphere src="#v-gt" rotation="0 -90 0"></a-videosphere>
-          <a-camera look-controls="enabled:true"></a-camera>
-        </a-scene>
-      </div>
-      <audio id="a-gt" crossorigin="anonymous" preload="auto"></audio>
-      <div class="tiny">video muted + FOA via Omnitone</div>
-    </div>
-
-    <div class="cell" id="cell-b1">
-      <div class="head">Baseline</div>
-      <button class="btn" id="btn-b1">Play / Resume</button>
-      <div class="rowbtn">
-        <button class="btn2" id="auto-b1">Auto-pan test</button>
-        <button class="btn2" id="stop-b1">Stop</button>
-      </div>
-      <div class="aframe-wrap" style="margin-top:10px;">
-        <a-scene embedded vr-mode-ui="enabled:true" style="height:240px; width:100%;">
-          <a-assets>
-            <video id="v-b1" crossorigin="anonymous" playsinline webkit-playsinline preload="auto"></video>
-          </a-assets>
-          <a-videosphere src="#v-b1" rotation="0 -90 0"></a-videosphere>
-          <a-camera look-controls="enabled:true"></a-camera>
-        </a-scene>
-      </div>
-      <audio id="a-b1" crossorigin="anonymous" preload="auto"></audio>
-      <div class="tiny">same video, different audio</div>
-    </div>
-
-    <div class="cell" id="cell-b2">
-      <div class="head">Baseline 2</div>
-      <button class="btn" id="btn-b2">Play / Resume</button>
-      <div class="rowbtn">
-        <button class="btn2" id="auto-b2">Auto-pan test</button>
-        <button class="btn2" id="stop-b2">Stop</button>
-      </div>
-      <div class="aframe-wrap" style="margin-top:10px;">
-        <a-scene embedded vr-mode-ui="enabled:true" style="height:240px; width:100%;">
-          <a-assets>
-            <video id="v-b2" crossorigin="anonymous" playsinline webkit-playsinline preload="auto"></video>
-          </a-assets>
-          <a-videosphere src="#v-b2" rotation="0 -90 0"></a-videosphere>
-          <a-camera look-controls="enabled:true"></a-camera>
-        </a-scene>
-      </div>
-      <audio id="a-b2" crossorigin="anonymous" preload="auto"></audio>
-      <div class="tiny">same video, different audio</div>
-    </div>
-
-    <div class="cell" id="cell-ours">
-      <div class="head">Ours</div>
-      <button class="btn" id="btn-ours">Play / Resume</button>
-      <div class="rowbtn">
-        <button class="btn2" id="auto-ours">Auto-pan test</button>
-        <button class="btn2" id="stop-ours">Stop</button>
-      </div>
-      <div class="aframe-wrap" style="margin-top:10px;">
-        <a-scene embedded vr-mode-ui="enabled:true" style="height:240px; width:100%;">
-          <a-assets>
-            <video id="v-ours" crossorigin="anonymous" playsinline webkit-playsinline preload="auto"></video>
-          </a-assets>
-          <a-videosphere src="#v-ours" rotation="0 -90 0"></a-videosphere>
-          <a-camera look-controls="enabled:true"></a-camera>
-        </a-scene>
-      </div>
-      <audio id="a-ours" crossorigin="anonymous" preload="auto"></audio>
-      <div class="tiny">same video, different audio</div>
-    </div>
+  <div class="card" style="padding:0;">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-video">GT (360° Video)</th>
+          <th class="col-audio">Baseline</th>
+          <th class="col-audio">Baseline 2</th>
+          <th class="col-audio">Ours</th>
+        </tr>
+      </thead>
+      <tbody id="samples-body"></tbody>
+    </table>
   </div>
 
-  <script>
-    function setMediaSources() {
-      const vids = ["v-gt","v-b1","v-b2","v-ours"].map(id => document.getElementById(id));
-      vids.forEach(v => { v.src = VIDEO_SRC; v.muted = true; v.loop = false; });
+  <div class="footer">
+    We would like to thank Omnitone for the 360° interactive spatial audio rendering.
+  </div>
 
-      document.getElementById("a-gt").src   = AUDIO_GT;
-      document.getElementById("a-b1").src   = AUDIO_B1;
-      document.getElementById("a-b2").src   = AUDIO_B2;
-      document.getElementById("a-ours").src = AUDIO_OURS;
+<script>
+/** =========================
+ *  EDIT ONLY THIS SECTION
+ *  =========================
+ *  Put 6–8 rows here. Each row: one shared 360 video + 4ch FOA wavs.
+ *  Use relative paths under /demos/ on GitHub Pages.
+ *
+ *  Example repo:
+ *    videos/xxx.webm
+ *    audios/xxx_gt.wav
+ *    audios/xxx_b1.wav
+ *    audios/xxx_b2.wav
+ *    audios/xxx_ours.wav
+ */
+const VER = "v1"; // bump if caching annoys you
+const ROT_SIGN = -1; // flip to +1 if you feel direction reversed
+
+const SAMPLES = [
+  {
+    name: "Sample 1——outdoor",
+    video: "videos/Gb24E-LqZyE_31.webm?" + VER,
+    b1:    "audios/Gb24E-LqZyE_31_pred.wav?" + VER,
+    b2:    "audios/Gb24E-LqZyE_31_pred.wav?" + VER,
+    ours:  "audios/Gb24E-LqZyE_31_pred.wav?" + VER,
+  },
+  // Add more rows like:
+  // {
+  //   name: "Sample 2",
+  //   video: "videos/xxxx.webm?" + VER,
+  //   b1:    "audios/xxxx_b1.wav?" + VER,
+  //   b2:    "audios/xxxx_b2.wav?" + VER,
+  //   ours:  "audios/xxxx_ours.wav?" + VER,
+  // },
+];
+/** ========================= */
+
+function yawToMat3_rowMajor(yawRad){
+  const c = Math.cos(yawRad), s = Math.sin(yawRad);
+  // row-major 3x3
+  return [ c,0,-s,  0,1,0,  s,0,c ];
+}
+
+// create one audio renderer + controls (Play / Auto-pan / Stop)
+async function createAudioUnit(containerEl, label, audioSrc, getCameraYawRad){
+  // UI
+  const title = document.createElement("div");
+  title.className = "rowtitle";
+  title.textContent = label;
+  containerEl.appendChild(title);
+
+  const btnPlay = document.createElement("button");
+  btnPlay.className = "btn";
+  btnPlay.textContent = "Play / Resume";
+  containerEl.appendChild(btnPlay);
+
+  const btnRow = document.createElement("div");
+  btnRow.className = "btnrow";
+  const btnAuto = document.createElement("button");
+  btnAuto.className = "btnmini";
+  btnAuto.textContent = "Auto-pan test";
+  const btnStop = document.createElement("button");
+  btnStop.className = "btnmini";
+  btnStop.textContent = "Stop";
+  btnRow.appendChild(btnAuto);
+  btnRow.appendChild(btnStop);
+  containerEl.appendChild(btnRow);
+
+  const tiny = document.createElement("div");
+  tiny.className = "tiny";
+  tiny.textContent = "FOA → binaural (Omnitone)";
+  containerEl.appendChild(tiny);
+
+  // Hidden <audio>
+  const audio = document.createElement("audio");
+  audio.crossOrigin = "anonymous";
+  audio.preload = "auto";
+  audio.src = audioSrc;
+  containerEl.appendChild(audio);
+
+  // Audio context + Omnitone
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const r = Omnitone.createFOARenderer(ctx);
+  await r.initialize();
+
+  const srcNode = ctx.createMediaElementSource(audio);
+  srcNode.connect(r.input);
+  r.output.connect(ctx.destination);
+
+  function applyYaw(yawRad){
+    const m3 = yawToMat3_rowMajor(ROT_SIGN * yawRad);
+    if (typeof r.setRotationMatrix3 === "function") r.setRotationMatrix3(m3);
+    else if (typeof r.setRotationMatrix === "function") r.setRotationMatrix(m3);
+    else if (r._foaRotator && typeof r._foaRotator.setRotationMatrix3 === "function") r._foaRotator.setRotationMatrix3(m3);
+  }
+
+  // Auto-pan state
+  let autoOn = false;
+  let t0 = 0;
+
+  function tick(ts){
+    // decide yaw source
+    if (autoOn) {
+      if (!t0) t0 = ts;
+      const t = (ts - t0) / 1000.0;
+      // sweep within [-90°, +90°] at ~1Hz
+      const yaw = (Math.PI/2) * Math.sin(2*Math.PI * 1.0 * t);
+      applyYaw(yaw);
+    } else {
+      const yaw = getCameraYawRad();
+      applyYaw(yaw);
     }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 
-    function yawToMat3_rowMajor(yawRad){
-      const c = Math.cos(yawRad), s = Math.sin(yawRad);
-      return [ c,0,-s,  0,1,0,  s,0,c ];
+  // Controls
+  btnPlay.addEventListener("click", async () => {
+    if (ctx.state !== "running") await ctx.resume();
+    try {
+      await audio.play();
+    } catch(e) {
+      console.error(e);
+      alert("Audio failed: " + (e.name || "") + " " + (e.message || e));
     }
+  });
 
-    async function bind(btnPlayId, btnAutoId, btnStopId, videoId, audioId) {
-      const btnPlay = document.getElementById(btnPlayId);
-      const btnAuto = document.getElementById(btnAutoId);
-      const btnStop = document.getElementById(btnStopId);
-      const video = document.getElementById(videoId);
-      const audio = document.getElementById(audioId);
+  btnStop.addEventListener("click", () => {
+    audio.pause();
+    audio.currentTime = 0;
+  });
 
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const r = Omnitone.createFOARenderer(ctx);
-      await r.initialize();
+  btnAuto.addEventListener("click", async () => {
+    if (ctx.state !== "running") await ctx.resume();
+    autoOn = !autoOn;
+    t0 = 0;
+    btnAuto.textContent = autoOn ? "Auto-pan: ON" : "Auto-pan test";
+  });
 
-      const src = ctx.createMediaElementSource(audio);
-      src.connect(r.input);
-      r.output.connect(ctx.destination);
+  return { audio, setAuto: (v)=>{autoOn=v;} };
+}
 
-      function applyYaw(yawRad){
-        const m3 = yawToMat3_rowMajor(ROT_SIGN * yawRad);
-        if (typeof r.setRotationMatrix3 === "function") r.setRotationMatrix3(m3);
-        else if (typeof r.setRotationMatrix === "function") r.setRotationMatrix(m3);
-        else if (r._foaRotator && typeof r._foaRotator.setRotationMatrix3 === "function") r._foaRotator.setRotationMatrix3(m3);
-      }
+function buildRow(sample, idx){
+  const tbody = document.getElementById("samples-body");
 
-      // robust scene/camera lookup
-      const cell = btnPlay.closest(".cell");
-      const sceneEl = cell ? cell.querySelector("a-scene") : null;
-      let camEl = null;
+  const tr = document.createElement("tr");
 
-      if (sceneEl) {
-        sceneEl.addEventListener("loaded", () => {
-          camEl = (sceneEl.camera && sceneEl.camera.el) ? sceneEl.camera.el : sceneEl.querySelector("a-camera");
-          const tick = () => {
-            // if autopan enabled, we override yaw below
-            if (!autoPanOn && camEl && camEl.object3D) {
-              applyYaw(camEl.object3D.rotation.y);
-            }
-            requestAnimationFrame(tick);
-          };
-          requestAnimationFrame(tick);
-        });
-      }
+  // --- Video cell ---
+  const tdV = document.createElement("td");
 
-      // --- Auto-pan test ---
-      let autoPanOn = false;
-      let autoPanT0 = 0;
+  const rowTitle = document.createElement("div");
+  rowTitle.className = "rowtitle";
+  rowTitle.textContent = sample.name || ("Sample " + (idx+1));
+  tdV.appendChild(rowTitle);
 
-      function autoPanTick(ts){
-        if (!autoPanOn) return;
-        if (!autoPanT0) autoPanT0 = ts;
-        const t = (ts - autoPanT0) / 1000.0;
-        // sweep yaw between [-90°, +90°] at ~1Hz
-        const yaw = (Math.PI/2) * Math.sin(2*Math.PI * 1.0 * t);
-        applyYaw(yaw);
-        requestAnimationFrame(autoPanTick);
-      }
+  const btnV = document.createElement("button");
+  btnV.className = "btn";
+  btnV.textContent = "Play / Resume Video";
+  tdV.appendChild(btnV);
 
-      btnAuto.addEventListener("click", async () => {
-        if (ctx.state !== "running") await ctx.resume();
-        autoPanOn = !autoPanOn;
-        autoPanT0 = 0;
-        btnAuto.textContent = autoPanOn ? "Auto-pan: ON" : "Auto-pan test";
-        if (autoPanOn) requestAnimationFrame(autoPanTick);
-      });
+  const viewer = document.createElement("div");
+  viewer.className = "viewer";
+  viewer.style.marginTop = "10px";
+  tdV.appendChild(viewer);
 
-      btnStop.addEventListener("click", () => {
-        video.pause();
-        audio.pause();
-        audio.currentTime = 0;
-      });
+  // Unique ids
+  const sceneId = `scene-${idx}`;
+  const vidId   = `vid-${idx}`;
 
-      // --- playback ---
-      btnPlay.addEventListener("click", async () => {
-        if (ctx.state !== "running") await ctx.resume();
-        try {
-          await video.play();
-          audio.currentTime = video.currentTime || 0;
-          await audio.play();
-        } catch(e) {
-          console.error(e);
-          alert("Audio failed: " + (e.name || "") + " " + (e.message || e));
-        }
-      });
+  viewer.innerHTML = `
+    <a-scene id="${sceneId}" embedded vr-mode-ui="enabled:true" style="height:220px; width:100%;">
+      <a-assets>
+        <video id="${vidId}" src="${sample.video}" crossorigin="anonymous"
+               playsinline webkit-playsinline preload="auto"></video>
+      </a-assets>
+      <a-videosphere src="#${vidId}" rotation="0 -90 0"></a-videosphere>
+      <a-camera look-controls="enabled:true"></a-camera>
+    </a-scene>
+  `;
 
-      video.addEventListener("ended", () => { audio.pause(); audio.currentTime = 0; });
-      video.addEventListener("pause", () => { audio.pause(); });
-      video.addEventListener("seeking", () => { audio.currentTime = video.currentTime || 0; });
+  // We'll read yaw from this scene's camera (realtime)
+  let camEl = null;
+  const sceneEl = () => document.getElementById(sceneId);
+  function getCameraYawRad(){
+    if (!camEl) return 0;
+    return camEl.object3D.rotation.y; // radians
+  }
+
+  // Resolve camera after scene loaded
+  const waitCam = setInterval(() => {
+    const s = sceneEl();
+    if (s && s.camera && s.camera.el) {
+      camEl = s.camera.el;
+      clearInterval(waitCam);
     }
+  }, 50);
 
-    setMediaSources();
-    bind("btn-gt","auto-gt","stop-gt","v-gt","a-gt");
-    bind("btn-b1","auto-b1","stop-b1","v-b1","a-b1");
-    bind("btn-b2","auto-b2","stop-b2","v-b2","a-b2");
-    bind("btn-ours","auto-ours","stop-ours","v-ours","a-ours");
-  </script>
+  const videoEl = () => document.getElementById(vidId);
+
+  btnV.addEventListener("click", async () => {
+    const v = videoEl();
+    if (!v) return;
+    v.muted = true;   // IMPORTANT: ignore audio track inside webm
+    v.loop = false;   // play once
+    try {
+      await v.play();
+    } catch(e) {
+      console.error(e);
+      alert("Video failed: " + (e.name || "") + " " + (e.message || e));
+    }
+  });
+
+  tr.appendChild(tdV);
+
+  // --- Audio cells ---
+  const tdB1 = document.createElement("td");
+  const tdB2 = document.createElement("td");
+  const tdO  = document.createElement("td");
+
+  tr.appendChild(tdB1);
+  tr.appendChild(tdB2);
+  tr.appendChild(tdO);
+
+  tbody.appendChild(tr);
+
+  // Create audio units (async)
+  (async () => {
+    await createAudioUnit(tdB1, "Baseline",   sample.b1, getCameraYawRad);
+    await createAudioUnit(tdB2, "Baseline 2", sample.b2, getCameraYawRad);
+    await createAudioUnit(tdO,  "Ours",       sample.ours, getCameraYawRad);
+  })();
+}
+
+// Build all rows
+SAMPLES.forEach((s, i) => buildRow(s, i));
+</script>
+
 </body>
 </html>
