@@ -109,8 +109,7 @@
   <script>
     function setMediaSources() {
       const vids = ["v-gt","v-b1","v-b2","v-ours"].map(id => document.getElementById(id));
-      vids.forEach(v => { v.src = VIDEO_SRC; v.muted = true; v.loop = true; });
-
+      vids.forEach(v => { v.src = VIDEO_SRC; v.muted = true; v.loop = false; });
       document.getElementById("a-gt").src   = AUDIO_GT;
       document.getElementById("a-b1").src   = AUDIO_B1;
       document.getElementById("a-b2").src   = AUDIO_B2;
@@ -143,7 +142,7 @@
       });
 
       // simple coupling
-      video.addEventListener("pause", () => audio.pause());
+      video.addEventListener("ended", () => { if (srcNode) srcNode.stop(); });
       video.addEventListener("seeking", () => { audio.currentTime = video.currentTime || 0; });
     }
 
