@@ -5,54 +5,140 @@
 <title>Spatial Audio Demo</title>
 
 <style>
+
 body{
-max-width:900px;
+font-family: Arial;
+max-width:1100px;
 margin:auto;
-font-family:Arial;
-background:white;
 padding:40px;
+background:white;
 }
 
 h1{
 text-align:center;
 }
 
-.authors{
-text-align:center;
+.abstract{
 margin-bottom:30px;
-color:#444;
 }
 
 img{
 width:100%;
 border-radius:10px;
-margin-top:10px;
 }
-</style>
 
+.note{
+margin:30px 0;
+font-size:18px;
+text-align:center;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th, td{
+text-align:center;
+padding:10px;
+}
+
+video{
+width:260px;
+border-radius:8px;
+}
+
+audio{
+width:200px;
+}
+
+</style>
 </head>
 
 <body>
 
-<h1>Paper Title</h1>
+<h1>Visually-Guided Spatial Audio Generation for 360◦ In-the-Wild Speech Scenes</h1>
 
-<div class="authors">
-Anonymous Authors
-</div>
-
+<div class="abstract">
 <h2>Abstract</h2>
-
 <p>
-Your abstract here.
+Spatial audio is a key component of immersive $360^\circ$ media, yet high-quality spatial capture remains limited in real-world speech-dominant scenes. This paper studies visually guided First-Order Ambisonics (FOA) speech spatialization in the wild: given aligned $360^\circ$ video and an omnidirectional audio track, the goal is to reconstruct coherent spatial audio that remains stable under viewpoint changes. To support this task, we introduce YT-SPEECH, a speech-oriented $360^\circ$ video-FOA dataset curated from YouTube. We propose a two-stage localizer-renderer framework, where an audio-visual model provides spatial priors and a conditional complex-domain U-Net reconstructs directional FOA signals from the omnidirectional input. A confidence-based gating strategy further stabilizes conditioning under ambiguous acoustic conditions. Experimental results demonstrate improved reconstruction fidelity, spatial accuracy, and speech perceptual quality.
 </p>
+</div>
 
 <h2>Framework</h2>
 
 <img src="framework.png">
 
-<h2>Demo Samples</h2>
+<div class="note">
+🎧 <b>Please wear headphones and drag the screen to experience the 360-degree audio</b> 🎥
+</div>
 
-<p>360° video demos will appear here.</p>
+<h2>Samples</h2>
+
+<table>
+
+<tr>
+<th>GT (360° Video)</th>
+<th>Baseline</th>
+<th>Baseline 2</th>
+<th>Ours</th>
+</tr>
+
+<tr>
+<td>
+<video controls>
+<source src="samples/s1_video.mp4" type="video/mp4">
+</video>
+</td>
+
+<td>
+<audio controls>
+<source src="samples/s1_baseline.wav">
+</audio>
+</td>
+
+<td>
+<audio controls>
+<source src="samples/s1_baseline2.wav">
+</audio>
+</td>
+
+<td>
+<audio controls>
+<source src="samples/s1_ours.wav">
+</audio>
+</td>
+</tr>
+
+
+<tr>
+<td>
+<video controls>
+<source src="samples/s2_video.mp4">
+</video>
+</td>
+
+<td>
+<audio controls>
+<source src="samples/s2_baseline.wav">
+</audio>
+</td>
+
+<td>
+<audio controls>
+<source src="samples/s2_baseline2.wav">
+</audio>
+</td>
+
+<td>
+<audio controls>
+<source src="samples/s2_ours.wav">
+</audio>
+</td>
+</tr>
+
+</table>
 
 </body>
 </html>
