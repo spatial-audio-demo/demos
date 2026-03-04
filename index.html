@@ -124,6 +124,23 @@
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const r = Omnitone.createFOARenderer(ctx);
       await r.initialize();
+      function yawToMat3(yawRad){
+        // 右手系绕Y轴旋转
+        const c = Math.cos(yawRad), s = Math.sin(yawRad);
+        // 3x3 row-major
+        return [ c, 0, -s,
+           0, 1,  0,
+           s, 0,  c ];
+      }
+
+      function applyRotation(yawRad){
+        const m3 = yawToMat3(yawRad);
+
+        // compatibility across builds
+        if (typeof r.setRotationMatrix3 === "function") r.setRotationMatrix3(m3);
+        else if (typeof r.setRotationMatrix === "function") r.setRotationMatrix(m3);
+        else if (r._foaRotator && typeof r._foaRotator.setRotationMatrix3 === "function") r._foaRotator.setRotationMatrix3(m3);
+      }
 
       const src = ctx.createMediaElementSource(audio);
       src.connect(r.input);
