@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Visually-Guided Spatial Audio Generation for 360◦ In-the-Wild Speech Scenes</title>
+  <title>Anonymous Demo</title>
 
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
@@ -12,20 +12,19 @@
   <style>
     body{
       font-family: Arial, sans-serif;
-      max-width: 1200px;
+      max-width: 1280px;
       margin: 0 auto;
       padding: 28px;
       background: #fff;
       color: #111;
     }
-    h1{margin: 0 0 10px; text-align:center; font-size: 26px;}
-    .authors{ text-align:center; color:#444; margin-bottom: 14px; }
+    h1{margin: 0 0 12px; text-align:center; font-size: 28px; line-height: 1.25;}
     .top{
       display:grid;
-      grid-template-columns: 1.1fr 0.9fr;
+      grid-template-columns: 1.15fr 0.85fr;
       gap: 14px;
       align-items: start;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
     .card{
       border: 1px solid #e6e6e6;
@@ -35,12 +34,14 @@
     }
     .card h2{margin: 0 0 8px; font-size: 16px;}
     .note{
-      margin: 14px 0 18px;
+      margin: 12px 0 18px;
       text-align:center;
       font-size: 15px;
     }
     .note small{display:block; color:#666; margin-top: 6px;}
+
     img{width:100%; border-radius: 12px; border: 1px solid #eee;}
+
     table{
       width: 100%;
       border-collapse: collapse;
@@ -58,26 +59,64 @@
       background: #fafafa;
       border-top: 1px solid #e6e6e6;
     }
-    .col-video{width: 38%;}
-    .col-audio{width: 20.5%;}
+
+    .col-video{width: 46%;}
+    .col-audio{width: 18%;}
+
+    /* Big rectangular 360 viewer */
     .viewer{
+      position: relative;
       border: 1px solid #eee;
-      border-radius: 12px;
+      border-radius: 14px;
       overflow: hidden;
-      height: 220px;
+      height: 320px;           /* <- larger rectangle */
+      background:#000;
     }
-    a-scene{height: 220px; width: 100%;}
+    a-scene{height: 320px; width: 100%;}
+
     .rowtitle{
       font-weight: 700;
       margin-bottom: 8px;
       text-align:left;
       font-size: 13px;
       color:#222;
+      display:flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
     }
+
+    /* Overlay controls (like your screenshot) */
+    .overlay-controls{
+      position:absolute;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      display:flex;
+      gap: 14px;
+      z-index: 10;
+      pointer-events: auto;
+    }
+    .ovbtn{
+      border: 2px solid rgba(255,255,255,0.85);
+      background: rgba(0,0,0,0.25);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      backdrop-filter: blur(2px);
+      user-select: none;
+    }
+    .ovbtn:hover{
+      background: rgba(0,0,0,0.35);
+    }
+
+    /* Audio column UI */
     .btn{
       border: 1px solid #ddd;
       background: #fff;
-      padding: 8px 10px;
+      padding: 9px 10px;
       border-radius: 10px;
       cursor: pointer;
       font-size: 13px;
@@ -89,7 +128,7 @@
       flex:1;
       border: 1px solid #ddd;
       background: #fff;
-      padding: 7px 8px;
+      padding: 8px 8px;
       border-radius: 10px;
       cursor: pointer;
       font-size: 12px;
@@ -99,21 +138,18 @@
     .footer{margin-top: 14px; font-size: 12px; color:#666;}
   </style>
 
-  <!-- 360 viewer -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <!-- Omnitone -->
   <script src="https://www.gstatic.com/external_hosted/omnitone/build/omnitone.min.js"></script>
 </head>
 
 <body>
   <h1>Visually-Guided Spatial Audio Demo</h1>
-  <div class="authors">Anonymous Authors</div>
 
   <div class="top">
     <div class="card">
       <h2>Abstract</h2>
-      <div style="line-height:1.5; font-size:13px; color:#222;">
-        Spatial audio is a key component of immersive $360^\circ$ media, yet high-quality spatial capture remains limited in real-world speech-dominant scenes. This paper studies visually guided First-Order Ambisonics (FOA) speech spatialization in the wild: given aligned $360^\circ$ video and an omnidirectional audio track, the goal is to reconstruct coherent spatial audio that remains stable under viewpoint changes. To support this task, we introduce YT-SPEECH, a speech-oriented $360^\circ$ video-FOA dataset curated from YouTube. We propose a two-stage localizer-renderer framework, where an audio-visual model provides spatial priors and a conditional complex-domain U-Net reconstructs directional FOA signals from the omnidirectional input. A confidence-based gating strategy further stabilizes conditioning under ambiguous acoustic conditions. Experimental results demonstrate improved reconstruction fidelity, spatial accuracy, and speech perceptual quality.
+      <div style="line-height:1.55; font-size:13px; color:#222;">
+        Paste your abstract here (short version is fine for review).
       </div>
     </div>
 
@@ -125,8 +161,8 @@
   </div>
 
   <div class="note">
-    🎧 <b>Please wear headphones and drag the screen to experience the 360-degree audio</b> 🎥
-    <small>Tip: “Auto-pan test” makes the rotation effect obvious even for 5s clips.</small>
+    🎧 <b>Please wear headphones and drag the video to experience 360° spatial rotation</b> 🎥
+    <small>(Rotation is driven by your view direction in the 360° player.)</small>
   </div>
 
   <div class="card" style="padding:0;">
@@ -150,48 +186,28 @@
 <script>
 /** =========================
  *  EDIT ONLY THIS SECTION
- *  =========================
- *  Put 6–8 rows here. Each row: one shared 360 video + 4ch FOA wavs.
- *  Use relative paths under /demos/ on GitHub Pages.
- *
- *  Example repo:
- *    videos/xxx.webm
- *    audios/xxx_gt.wav
- *    audios/xxx_b1.wav
- *    audios/xxx_b2.wav
- *    audios/xxx_ours.wav
- */
-const VER = "v1"; // bump if caching annoys you
-const ROT_SIGN = -1; // flip to +1 if you feel direction reversed
+ *  ========================= */
+const VER = "v1";          // bump if caching annoys you
+const ROT_SIGN = -1;       // flip to +1 if direction feels reversed
 
 const SAMPLES = [
   {
-    name: "Sample 1——outdoor",
+    name: "Sample 1",
     video: "videos/Gb24E-LqZyE_31.webm?" + VER,
     b1:    "audios/Gb24E-LqZyE_31_pred.wav?" + VER,
     b2:    "audios/Gb24E-LqZyE_31_pred.wav?" + VER,
     ours:  "audios/Gb24E-LqZyE_31_pred.wav?" + VER,
   },
-  // Add more rows like:
-  // {
-  //   name: "Sample 2",
-  //   video: "videos/xxxx.webm?" + VER,
-  //   b1:    "audios/xxxx_b1.wav?" + VER,
-  //   b2:    "audios/xxxx_b2.wav?" + VER,
-  //   ours:  "audios/xxxx_ours.wav?" + VER,
-  // },
+  // Add 6–8 rows here.
 ];
 /** ========================= */
 
 function yawToMat3_rowMajor(yawRad){
   const c = Math.cos(yawRad), s = Math.sin(yawRad);
-  // row-major 3x3
   return [ c,0,-s,  0,1,0,  s,0,c ];
 }
 
-// create one audio renderer + controls (Play / Auto-pan / Stop)
 async function createAudioUnit(containerEl, label, audioSrc, getCameraYawRad){
-  // UI
   const title = document.createElement("div");
   title.className = "rowtitle";
   title.textContent = label;
@@ -199,18 +215,18 @@ async function createAudioUnit(containerEl, label, audioSrc, getCameraYawRad){
 
   const btnPlay = document.createElement("button");
   btnPlay.className = "btn";
-  btnPlay.textContent = "Play / Resume";
+  btnPlay.textContent = "Play / Pause";
   containerEl.appendChild(btnPlay);
 
   const btnRow = document.createElement("div");
   btnRow.className = "btnrow";
-  const btnAuto = document.createElement("button");
-  btnAuto.className = "btnmini";
-  btnAuto.textContent = "Auto-pan test";
+  const btnRew = document.createElement("button");
+  btnRew.className = "btnmini";
+  btnRew.textContent = "Rewind";
   const btnStop = document.createElement("button");
   btnStop.className = "btnmini";
   btnStop.textContent = "Stop";
-  btnRow.appendChild(btnAuto);
+  btnRow.appendChild(btnRew);
   btnRow.appendChild(btnStop);
   containerEl.appendChild(btnRow);
 
@@ -219,14 +235,12 @@ async function createAudioUnit(containerEl, label, audioSrc, getCameraYawRad){
   tiny.textContent = "FOA → binaural (Omnitone)";
   containerEl.appendChild(tiny);
 
-  // Hidden <audio>
   const audio = document.createElement("audio");
   audio.crossOrigin = "anonymous";
   audio.preload = "auto";
   audio.src = audioSrc;
   containerEl.appendChild(audio);
 
-  // Audio context + Omnitone
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const r = Omnitone.createFOARenderer(ctx);
   await r.initialize();
@@ -242,55 +256,51 @@ async function createAudioUnit(containerEl, label, audioSrc, getCameraYawRad){
     else if (r._foaRotator && typeof r._foaRotator.setRotationMatrix3 === "function") r._foaRotator.setRotationMatrix3(m3);
   }
 
-  // Auto-pan state
-  let autoOn = false;
-  let t0 = 0;
-
-  function tick(ts){
-    // decide yaw source
-    if (autoOn) {
-      if (!t0) t0 = ts;
-      const t = (ts - t0) / 1000.0;
-      // sweep within [-90°, +90°] at ~1Hz
-      const yaw = (Math.PI/2) * Math.sin(2*Math.PI * 1.0 * t);
-      applyYaw(yaw);
-    } else {
-      const yaw = getCameraYawRad();
-      applyYaw(yaw);
-    }
+  // Continuous rotation update driven by video camera yaw
+  const tick = () => {
+    applyYaw(getCameraYawRad());
     requestAnimationFrame(tick);
-  }
+  };
   requestAnimationFrame(tick);
 
-  // Controls
+  // Audio controls
   btnPlay.addEventListener("click", async () => {
     if (ctx.state !== "running") await ctx.resume();
     try {
-      await audio.play();
+      if (audio.paused) {
+        await audio.play();
+        btnPlay.textContent = "Pause";
+      } else {
+        audio.pause();
+        btnPlay.textContent = "Play";
+      }
     } catch(e) {
       console.error(e);
       alert("Audio failed: " + (e.name || "") + " " + (e.message || e));
     }
   });
 
+  btnRew.addEventListener("click", () => {
+    audio.currentTime = 0;
+    audio.play().catch(()=>{});
+    btnPlay.textContent = "Pause";
+  });
+
   btnStop.addEventListener("click", () => {
     audio.pause();
     audio.currentTime = 0;
+    btnPlay.textContent = "Play";
   });
 
-  btnAuto.addEventListener("click", async () => {
-    if (ctx.state !== "running") await ctx.resume();
-    autoOn = !autoOn;
-    t0 = 0;
-    btnAuto.textContent = autoOn ? "Auto-pan: ON" : "Auto-pan test";
+  audio.addEventListener("ended", () => {
+    btnPlay.textContent = "Play";
   });
 
-  return { audio, setAuto: (v)=>{autoOn=v;} };
+  return { audio };
 }
 
 function buildRow(sample, idx){
   const tbody = document.getElementById("samples-body");
-
   const tr = document.createElement("tr");
 
   // --- Video cell ---
@@ -298,17 +308,11 @@ function buildRow(sample, idx){
 
   const rowTitle = document.createElement("div");
   rowTitle.className = "rowtitle";
-  rowTitle.textContent = sample.name || ("Sample " + (idx+1));
+  rowTitle.innerHTML = `<span>${sample.name || ("Sample " + (idx+1))}</span>`;
   tdV.appendChild(rowTitle);
-
-  const btnV = document.createElement("button");
-  btnV.className = "btn";
-  btnV.textContent = "Play / Resume Video";
-  tdV.appendChild(btnV);
 
   const viewer = document.createElement("div");
   viewer.className = "viewer";
-  viewer.style.marginTop = "10px";
   tdV.appendChild(viewer);
 
   // Unique ids
@@ -316,7 +320,7 @@ function buildRow(sample, idx){
   const vidId   = `vid-${idx}`;
 
   viewer.innerHTML = `
-    <a-scene id="${sceneId}" embedded vr-mode-ui="enabled:true" style="height:220px; width:100%;">
+    <a-scene id="${sceneId}" embedded vr-mode-ui="enabled:true" style="height:320px; width:100%;">
       <a-assets>
         <video id="${vidId}" src="${sample.video}" crossorigin="anonymous"
                playsinline webkit-playsinline preload="auto"></video>
@@ -324,39 +328,88 @@ function buildRow(sample, idx){
       <a-videosphere src="#${vidId}" rotation="0 -90 0"></a-videosphere>
       <a-camera look-controls="enabled:true"></a-camera>
     </a-scene>
+
+    <div class="overlay-controls">
+      <div class="ovbtn" id="rew-${idx}">Rewind</div>
+      <div class="ovbtn" id="pp-${idx}">Play</div>
+    </div>
   `;
 
-  // We'll read yaw from this scene's camera (realtime)
+  // Resolve camera yaw
   let camEl = null;
-  const sceneEl = () => document.getElementById(sceneId);
+  const getSceneEl = () => document.getElementById(sceneId);
+  const getVideoEl = () => document.getElementById(vidId);
+
   function getCameraYawRad(){
     if (!camEl) return 0;
     return camEl.object3D.rotation.y; // radians
   }
 
-  // Resolve camera after scene loaded
+  // Resolve camera after scene is ready
   const waitCam = setInterval(() => {
-    const s = sceneEl();
+    const s = getSceneEl();
     if (s && s.camera && s.camera.el) {
       camEl = s.camera.el;
       clearInterval(waitCam);
     }
   }, 50);
 
-  const videoEl = () => document.getElementById(vidId);
+  // Overlay buttons behavior
+  const btnRew = () => document.getElementById(`rew-${idx}`);
+  const btnPP  = () => document.getElementById(`pp-${idx}`);
 
-  btnV.addEventListener("click", async () => {
-    const v = videoEl();
+  async function playVideo(){
+    const v = getVideoEl();
     if (!v) return;
-    v.muted = true;   // IMPORTANT: ignore audio track inside webm
+    v.muted = true;   // ignore webm audio track
     v.loop = false;   // play once
+    await v.play();
+  }
+  function pauseVideo(){
+    const v = getVideoEl();
+    if (!v) return;
+    v.pause();
+  }
+  function rewindVideo(){
+    const v = getVideoEl();
+    if (!v) return;
+    v.currentTime = 0;
+  }
+
+  btnPP().addEventListener("click", async () => {
     try {
-      await v.play();
+      const v = getVideoEl();
+      if (!v) return;
+      if (v.paused) {
+        await playVideo();
+        btnPP().textContent = "Pause";
+      } else {
+        pauseVideo();
+        btnPP().textContent = "Play";
+      }
     } catch(e) {
       console.error(e);
       alert("Video failed: " + (e.name || "") + " " + (e.message || e));
     }
   });
+
+  btnRew().addEventListener("click", async () => {
+    try {
+      rewindVideo();
+      await playVideo();
+      btnPP().textContent = "Pause";
+    } catch(e) {
+      console.error(e);
+    }
+  });
+
+  // When video ends, reset overlay label
+  const pollEnd = setInterval(() => {
+    const v = getVideoEl();
+    if (!v) return;
+    v.addEventListener("ended", () => { btnPP().textContent = "Play"; });
+    clearInterval(pollEnd);
+  }, 100);
 
   tr.appendChild(tdV);
 
