@@ -69,7 +69,7 @@
       border: 1px solid #eee;
       border-radius: 14px;
       overflow: hidden;
-      height: 320px;           /* <- larger rectangle */
+      height: 320px;
       background:#000;
     }
     a-scene{height: 320px; width: 100%;}
@@ -86,7 +86,7 @@
       gap: 10px;
     }
 
-    /* Overlay controls (like your screenshot) */
+    /* Overlay controls on video */
     .overlay-controls{
       position:absolute;
       left: 50%;
@@ -134,8 +134,21 @@
       font-size: 12px;
     }
     .btnmini:hover{background:#f7f7f7;}
-    .tiny{font-size: 11px; color:#666; margin-top: 6px;}
+    .tiny{font-size: 11px; color:#666; margin-top: 6px; text-align:left;}
     .footer{margin-top: 14px; font-size: 12px; color:#666;}
+
+    /* on-page error panel (so you don't need DevTools) */
+    #errbox{
+      margin-top: 12px;
+      padding: 10px 12px;
+      border: 1px solid #ffd2d2;
+      background: #fff4f4;
+      color: #8b0000;
+      border-radius: 10px;
+      font-size: 12px;
+      display:none;
+      white-space: pre-wrap;
+    }
   </style>
 
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
@@ -183,13 +196,16 @@
     We would like to thank Omnitone for the 360° interactive spatial audio rendering.
   </div>
 
+  <div id="errbox"></div>
+
 <script>
 /** =========================
  *  EDIT ONLY THIS SECTION
  *  ========================= */
-const VER = "v1";          // bump if caching annoys you
-const ROT_SIGN = -1;       // flip to +1 if direction feels reversed
+const VER = "v1";    // bump if caching annoys you
+const ROT_SIGN = -1; // flip to +1 if direction feels reversed
 
+// IMPORTANT: make sure these paths match your repo folders
 const SAMPLES = [
   {
     name: "Sample 1",
@@ -198,9 +214,19 @@ const SAMPLES = [
     b2:    "audios/Gb24E-LqZyE_31_pred.wav?" + VER,
     ours:  "audios/Gb24E-LqZyE_31_pred.wav?" + VER,
   },
-  // Add 6–8 rows here.
+  // add more rows...
 ];
 /** ========================= */
+
+function showErr(e){
+  const box = document.getElementById("errbox");
+  box.style.display = "block";
+  box.textContent = String(e && e.stack ? e.stack : e);
+}
+
+window.addEventListener("error", (ev) => {
+  showErr("JS Error: " + (ev.message || ev.error || "unknown"));
+});
 
 function yawToMat3_rowMajor(yawRad){
   const c = Math.cos(yawRad), s = Math.sin(yawRad);
@@ -215,7 +241,7 @@ async function createAudioUnit(containerEl, label, audioSrc, getCameraYawRad){
 
   const btnPlay = document.createElement("button");
   btnPlay.className = "btn";
-  btnPlay.textContent = "Play / Pause";
+  btnPlay.textContent = "Play";
   containerEl.appendChild(btnPlay);
 
   const btnRow = document.createElement("div");
@@ -256,14 +282,13 @@ async function createAudioUnit(containerEl, label, audioSrc, getCameraYawRad){
     else if (r._foaRotator && typeof r._foaRotator.setRotationMatrix3 === "function") r._foaRotator.setRotationMatrix3(m3);
   }
 
-  // Continuous rotation update driven by video camera yaw
+  // continuous rotation update
   const tick = () => {
     applyYaw(getCameraYawRad());
     requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
 
-  // Audio controls
   btnPlay.addEventListener("click", async () => {
     if (ctx.state !== "running") await ctx.resume();
     try {
@@ -275,8 +300,7 @@ async function createAudioUnit(containerEl, label, audioSrc, getCameraYawRad){
         btnPlay.textContent = "Play";
       }
     } catch(e) {
-      console.error(e);
-      alert("Audio failed: " + (e.name || "") + " " + (e.message || e));
+      showErr("Audio failed: " + (e.name || "") + " " + (e.message || e));
     }
   });
 
@@ -292,20 +316,19 @@ async function createAudioUnit(containerEl, label, audioSrc, getCameraYawRad){
     btnPlay.textContent = "Play";
   });
 
-  audio.addEventListener("ended", () => {
-    btnPlay.textContent = "Play";
-  });
+  audio.addEventListener("ended", () => { btnPlay.textContent = "Play"; });
 
   return { audio };
 }
 
 function buildRow(sample, idx){
   const tbody = document.getElementById("samples-body");
+  if (!tbody) throw new Error("Cannot find #samples-body");
+
   const tr = document.createElement("tr");
 
-  // --- Video cell ---
+  // Video cell
   const tdV = document.createElement("td");
-
   const rowTitle = document.createElement("div");
   rowTitle.className = "rowtitle";
   rowTitle.innerHTML = `<span>${sample.name || ("Sample " + (idx+1))}</span>`;
@@ -315,12 +338,12 @@ function buildRow(sample, idx){
   viewer.className = "viewer";
   tdV.appendChild(viewer);
 
-  // Unique ids
   const sceneId = `scene-${idx}`;
   const vidId   = `vid-${idx}`;
 
-  viewer.innerHTML = `
-    <a-scene id="${sceneId}" embedded vr-mode-ui="enabled:true" style="height:320px; width:100%;">
+  // Build viewer content safely
+  const sceneHTML =
+    `<a-scene id="${sceneId}" embedded vr-mode-ui="enabled:true" style="height:320px; width:100%;">
       <a-assets>
         <video id="${vidId}" src="${sample.video}" crossorigin="anonymous"
                playsinline webkit-playsinline preload="auto"></video>
@@ -328,24 +351,26 @@ function buildRow(sample, idx){
       <a-videosphere src="#${vidId}" rotation="0 -90 0"></a-videosphere>
       <a-camera look-controls="enabled:true"></a-camera>
     </a-scene>
-
     <div class="overlay-controls">
       <div class="ovbtn" id="rew-${idx}">Rewind</div>
       <div class="ovbtn" id="pp-${idx}">Play</div>
-    </div>
-  `;
+    </div>`;
+
+  viewer.innerHTML = sceneHTML;
 
   // Resolve camera yaw
   let camEl = null;
   const getSceneEl = () => document.getElementById(sceneId);
   const getVideoEl = () => document.getElementById(vidId);
+  const btnPP  = () => document.getElementById(`pp-${idx}`);
+  const btnRew = () => document.getElementById(`rew-${idx}`);
 
   function getCameraYawRad(){
     if (!camEl) return 0;
-    return camEl.object3D.rotation.y; // radians
+    return camEl.object3D.rotation.y;
   }
 
-  // Resolve camera after scene is ready
+  // Wait for scene camera
   const waitCam = setInterval(() => {
     const s = getSceneEl();
     if (s && s.camera && s.camera.el) {
@@ -354,15 +379,11 @@ function buildRow(sample, idx){
     }
   }, 50);
 
-  // Overlay buttons behavior
-  const btnRew = () => document.getElementById(`rew-${idx}`);
-  const btnPP  = () => document.getElementById(`pp-${idx}`);
-
   async function playVideo(){
     const v = getVideoEl();
     if (!v) return;
-    v.muted = true;   // ignore webm audio track
-    v.loop = false;   // play once
+    v.muted = true;
+    v.loop = false;
     await v.play();
   }
   function pauseVideo(){
@@ -388,8 +409,7 @@ function buildRow(sample, idx){
         btnPP().textContent = "Play";
       }
     } catch(e) {
-      console.error(e);
-      alert("Video failed: " + (e.name || "") + " " + (e.message || e));
+      showErr("Video failed: " + (e.name || "") + " " + (e.message || e));
     }
   });
 
@@ -399,11 +419,11 @@ function buildRow(sample, idx){
       await playVideo();
       btnPP().textContent = "Pause";
     } catch(e) {
-      console.error(e);
+      showErr("Video rewind failed: " + (e.name || "") + " " + (e.message || e));
     }
   });
 
-  // When video ends, reset overlay label
+  // reset label at end
   const pollEnd = setInterval(() => {
     const v = getVideoEl();
     if (!v) return;
@@ -413,27 +433,39 @@ function buildRow(sample, idx){
 
   tr.appendChild(tdV);
 
-  // --- Audio cells ---
+  // Audio cells
   const tdB1 = document.createElement("td");
   const tdB2 = document.createElement("td");
   const tdO  = document.createElement("td");
-
   tr.appendChild(tdB1);
   tr.appendChild(tdB2);
   tr.appendChild(tdO);
 
   tbody.appendChild(tr);
 
-  // Create audio units (async)
+  // Create audio units
   (async () => {
-    await createAudioUnit(tdB1, "Baseline",   sample.b1, getCameraYawRad);
-    await createAudioUnit(tdB2, "Baseline 2", sample.b2, getCameraYawRad);
-    await createAudioUnit(tdO,  "Ours",       sample.ours, getCameraYawRad);
+    try {
+      await createAudioUnit(tdB1, "Baseline",   sample.b1, getCameraYawRad);
+      await createAudioUnit(tdB2, "Baseline 2", sample.b2, getCameraYawRad);
+      await createAudioUnit(tdO,  "Ours",       sample.ours, getCameraYawRad);
+    } catch (e) {
+      showErr(e);
+    }
   })();
 }
 
-// Build all rows
-SAMPLES.forEach((s, i) => buildRow(s, i));
+document.addEventListener("DOMContentLoaded", () => {
+  try {
+    if (!Array.isArray(SAMPLES) || SAMPLES.length === 0) {
+      showErr("SAMPLES is empty. Add at least one sample row in the SAMPLES array.");
+      return;
+    }
+    SAMPLES.forEach((s, i) => buildRow(s, i));
+  } catch (e) {
+    showErr(e);
+  }
+});
 </script>
 
 </body>
