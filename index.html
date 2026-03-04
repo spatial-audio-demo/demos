@@ -14,7 +14,8 @@
     .head{font-weight:700; text-align:center; margin-bottom:8px;}
     .btn{width:100%; border:1px solid #ddd; background:#fff; padding:10px 12px; border-radius:10px; cursor:pointer;}
     .btn:hover{background:#f7f7f7;}
-    .aframe-wrap{border:1px solid #eee; border-radius:12px; overflow:hidden;}
+    .aframe-wrap{height:240px;} 
+     a-scene{height:240px; width:100%;}
     .tiny{font-size:12px; color:#666; margin-top:8px; text-align:center;}
   </style>
 
@@ -23,7 +24,7 @@
 </head>
 
 <body>
-  <h1>Paper Title</h1>
+  <h1>Visually-Guided Spatial Audio Generation for 360◦ In-the-Wild Speech Scenes</h1>
 
   <div class="note">
     🎧 <b>Please wear headphones and drag the screen to experience the 360-degree audio</b> 🎥
@@ -44,7 +45,7 @@
       <div class="head">GT</div>
       <button class="btn" id="btn-gt">Play / Resume</button>
       <div class="aframe-wrap" style="margin-top:10px;">
-        <a-scene embedded vr-mode-ui="enabled:true">
+        <a-scene embedded vr-mode-ui="enabled:true" style="height:240px; width:100%;">
           <a-assets>
             <video id="v-gt" crossorigin="anonymous" playsinline webkit-playsinline preload="auto"></video>
           </a-assets>
@@ -60,7 +61,7 @@
       <div class="head">Baseline</div>
       <button class="btn" id="btn-b1">Play / Resume</button>
       <div class="aframe-wrap" style="margin-top:10px;">
-        <a-scene embedded vr-mode-ui="enabled:true">
+        <a-scene embedded vr-mode-ui="enabled:true" style="height:240px; width:100%;">
           <a-assets>
             <video id="v-b1" crossorigin="anonymous" playsinline webkit-playsinline preload="auto"></video>
           </a-assets>
@@ -76,7 +77,7 @@
       <div class="head">Baseline 2</div>
       <button class="btn" id="btn-b2">Play / Resume</button>
       <div class="aframe-wrap" style="margin-top:10px;">
-        <a-scene embedded vr-mode-ui="enabled:true">
+        <a-scene embedded vr-mode-ui="enabled:true" style="height:240px; width:100%;">
           <a-assets>
             <video id="v-b2" crossorigin="anonymous" playsinline webkit-playsinline preload="auto"></video>
           </a-assets>
@@ -92,7 +93,7 @@
       <div class="head">Ours</div>
       <button class="btn" id="btn-ours">Play / Resume</button>
       <div class="aframe-wrap" style="margin-top:10px;">
-        <a-scene embedded vr-mode-ui="enabled:true">
+        <a-scene embedded vr-mode-ui="enabled:true" style="height:240px; width:100%;">
           <a-assets>
             <video id="v-ours" crossorigin="anonymous" playsinline webkit-playsinline preload="auto"></video>
           </a-assets>
