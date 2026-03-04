@@ -1,144 +1,156 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<title>Spatial Audio Demo</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Anonymous Demo</title>
 
-<style>
+  <style>
+    body{font-family:Arial, sans-serif; max-width:1200px; margin:0 auto; padding:28px; background:#fff; color:#111;}
+    h1{margin:0 0 10px; text-align:center;}
+    .note{margin:14px 0 18px; text-align:center; font-size:16px;}
+    .grid{display:grid; grid-template-columns: repeat(4, 1fr); gap:14px;}
+    .cell{border:1px solid #e6e6e6; border-radius:14px; padding:10px; background:#fff;}
+    .head{font-weight:700; text-align:center; margin-bottom:8px;}
+    .btn{width:100%; border:1px solid #ddd; background:#fff; padding:10px 12px; border-radius:10px; cursor:pointer;}
+    .btn:hover{background:#f7f7f7;}
+    .aframe-wrap{border:1px solid #eee; border-radius:12px; overflow:hidden;}
+    .tiny{font-size:12px; color:#666; margin-top:8px; text-align:center;}
+  </style>
 
-body{
-font-family: Arial;
-max-width:1100px;
-margin:auto;
-padding:40px;
-background:white;
-}
-
-h1{
-text-align:center;
-}
-
-.abstract{
-margin-bottom:30px;
-}
-
-img{
-width:100%;
-border-radius:10px;
-}
-
-.note{
-margin:30px 0;
-font-size:18px;
-text-align:center;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-}
-
-th, td{
-text-align:center;
-padding:10px;
-}
-
-video{
-width:260px;
-border-radius:8px;
-}
-
-audio{
-width:200px;
-}
-
-</style>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://www.gstatic.com/external_hosted/omnitone/build/omnitone.min.js"></script>
 </head>
 
 <body>
+  <h1>Paper Title</h1>
 
-<h1>Visually-Guided Spatial Audio Generation for 360◦ In-the-Wild Speech Scenes</h1>
+  <div class="note">
+    🎧 <b>Please wear headphones and drag the screen to experience the 360-degree audio</b> 🎥
+  </div>
 
-<div class="abstract">
-<h2>Abstract</h2>
-<p>
-Spatial audio is a key component of immersive $360^\circ$ media, yet high-quality spatial capture remains limited in real-world speech-dominant scenes. This paper studies visually guided First-Order Ambisonics (FOA) speech spatialization in the wild: given aligned $360^\circ$ video and an omnidirectional audio track, the goal is to reconstruct coherent spatial audio that remains stable under viewpoint changes. To support this task, we introduce YT-SPEECH, a speech-oriented $360^\circ$ video-FOA dataset curated from YouTube. We propose a two-stage localizer-renderer framework, where an audio-visual model provides spatial priors and a conditional complex-domain U-Net reconstructs directional FOA signals from the omnidirectional input. A confidence-based gating strategy further stabilizes conditioning under ambiguous acoustic conditions. Experimental results demonstrate improved reconstruction fidelity, spatial accuracy, and speech perceptual quality.
-</p>
-</div>
+  <!-- ======= EDIT ONLY THESE PATHS ======= -->
+  <script>
+    const VIDEO_SRC = "videos/Gb24E-LqZyE_31.webm";   // e.g., "videos/demo.webm" or "demo.webm"
+    const AUDIO_GT  = "audios/Gb24E-LqZyE_31_gt.wav.wav";        // e.g., "audio/s1_gt.wav"
+    const AUDIO_B1  = "audios/Gb24E-LqZyE_31_pred.wav.wav";
+    const AUDIO_B2  = "audios/Gb24E-LqZyE_31_pred.wav.wav";
+    const AUDIO_OURS= "audios/Gb24E-LqZyE_31_pred.wav.wav";
+  </script>
+  <!-- ===================================== -->
 
-<h2>Framework</h2>
+  <div class="grid">
+    <div class="cell">
+      <div class="head">GT</div>
+      <button class="btn" id="btn-gt">Play / Resume</button>
+      <div class="aframe-wrap" style="margin-top:10px;">
+        <a-scene embedded vr-mode-ui="enabled:true">
+          <a-assets>
+            <video id="v-gt" crossorigin="anonymous" playsinline webkit-playsinline preload="auto"></video>
+          </a-assets>
+          <a-videosphere src="#v-gt" rotation="0 -90 0"></a-videosphere>
+          <a-camera look-controls="enabled:true"></a-camera>
+        </a-scene>
+      </div>
+      <audio id="a-gt" crossorigin="anonymous" preload="auto"></audio>
+      <div class="tiny">video muted + FOA via Omnitone</div>
+    </div>
 
-<img src="framework.png">
+    <div class="cell">
+      <div class="head">Baseline</div>
+      <button class="btn" id="btn-b1">Play / Resume</button>
+      <div class="aframe-wrap" style="margin-top:10px;">
+        <a-scene embedded vr-mode-ui="enabled:true">
+          <a-assets>
+            <video id="v-b1" crossorigin="anonymous" playsinline webkit-playsinline preload="auto"></video>
+          </a-assets>
+          <a-videosphere src="#v-b1" rotation="0 -90 0"></a-videosphere>
+          <a-camera look-controls="enabled:true"></a-camera>
+        </a-scene>
+      </div>
+      <audio id="a-b1" crossorigin="anonymous" preload="auto"></audio>
+      <div class="tiny">same video, different audio</div>
+    </div>
 
-<div class="note">
-🎧 <b>Please wear headphones and drag the screen to experience the 360-degree audio</b> 🎥
-</div>
+    <div class="cell">
+      <div class="head">Baseline 2</div>
+      <button class="btn" id="btn-b2">Play / Resume</button>
+      <div class="aframe-wrap" style="margin-top:10px;">
+        <a-scene embedded vr-mode-ui="enabled:true">
+          <a-assets>
+            <video id="v-b2" crossorigin="anonymous" playsinline webkit-playsinline preload="auto"></video>
+          </a-assets>
+          <a-videosphere src="#v-b2" rotation="0 -90 0"></a-videosphere>
+          <a-camera look-controls="enabled:true"></a-camera>
+        </a-scene>
+      </div>
+      <audio id="a-b2" crossorigin="anonymous" preload="auto"></audio>
+      <div class="tiny">same video, different audio</div>
+    </div>
 
-<h2>Samples</h2>
+    <div class="cell">
+      <div class="head">Ours</div>
+      <button class="btn" id="btn-ours">Play / Resume</button>
+      <div class="aframe-wrap" style="margin-top:10px;">
+        <a-scene embedded vr-mode-ui="enabled:true">
+          <a-assets>
+            <video id="v-ours" crossorigin="anonymous" playsinline webkit-playsinline preload="auto"></video>
+          </a-assets>
+          <a-videosphere src="#v-ours" rotation="0 -90 0"></a-videosphere>
+          <a-camera look-controls="enabled:true"></a-camera>
+        </a-scene>
+      </div>
+      <audio id="a-ours" crossorigin="anonymous" preload="auto"></audio>
+      <div class="tiny">same video, different audio</div>
+    </div>
+  </div>
 
-<table>
+  <script>
+    function setMediaSources() {
+      const vids = ["v-gt","v-b1","v-b2","v-ours"].map(id => document.getElementById(id));
+      vids.forEach(v => { v.src = VIDEO_SRC; v.muted = true; v.loop = true; });
 
-<tr>
-<th>GT (360° Video)</th>
-<th>Baseline</th>
-<th>Baseline 2</th>
-<th>Ours</th>
-</tr>
+      document.getElementById("a-gt").src   = AUDIO_GT;
+      document.getElementById("a-b1").src   = AUDIO_B1;
+      document.getElementById("a-b2").src   = AUDIO_B2;
+      document.getElementById("a-ours").src = AUDIO_OURS;
+    }
 
-<tr>
-<td>
-<video controls>
-<source src="samples/s1_video.mp4" type="video/mp4">
-</video>
-</td>
+    async function bind(btnId, videoId, audioId) {
+      const btn = document.getElementById(btnId);
+      const video = document.getElementById(videoId);
+      const audio = document.getElementById(audioId);
 
-<td>
-<audio controls>
-<source src="samples/s1_baseline.wav">
-</audio>
-</td>
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const r = Omnitone.createFOARenderer(ctx);
+      await r.initialize();
 
-<td>
-<audio controls>
-<source src="samples/s1_baseline2.wav">
-</audio>
-</td>
+      const src = ctx.createMediaElementSource(audio);
+      src.connect(r.input);
+      r.output.connect(ctx.destination);
 
-<td>
-<audio controls>
-<source src="samples/s1_ours.wav">
-</audio>
-</td>
-</tr>
+      btn.addEventListener("click", async () => {
+        if (ctx.state !== "running") await ctx.resume();
+        try {
+          await video.play();
+          audio.currentTime = video.currentTime || 0;
+          await audio.play();
+        } catch(e) {
+          console.log(e);
+          alert("Playback blocked. Use Chrome on HTTPS (GitHub Pages), then click again.");
+        }
+      });
 
+      // simple coupling
+      video.addEventListener("pause", () => audio.pause());
+      video.addEventListener("seeking", () => { audio.currentTime = video.currentTime || 0; });
+    }
 
-<tr>
-<td>
-<video controls>
-<source src="samples/s2_video.mp4">
-</video>
-</td>
-
-<td>
-<audio controls>
-<source src="samples/s2_baseline.wav">
-</audio>
-</td>
-
-<td>
-<audio controls>
-<source src="samples/s2_baseline2.wav">
-</audio>
-</td>
-
-<td>
-<audio controls>
-<source src="samples/s2_ours.wav">
-</audio>
-</td>
-</tr>
-
-</table>
-
+    setMediaSources();
+    bind("btn-gt", "v-gt", "a-gt");
+    bind("btn-b1", "v-b1", "a-b1");
+    bind("btn-b2", "v-b2", "a-b2");
+    bind("btn-ours", "v-ours", "a-ours");
+  </script>
 </body>
 </html>
