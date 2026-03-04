@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Anonymous Demo</title>
 
+  <!-- (optional but useful) reduce caching during debugging -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
   <style>
     body{font-family:Arial, sans-serif; max-width:1200px; margin:0 auto; padding:28px; background:#fff; color:#111;}
     h1{margin:0 0 10px; text-align:center;}
@@ -14,8 +19,8 @@
     .head{font-weight:700; text-align:center; margin-bottom:8px;}
     .btn{width:100%; border:1px solid #ddd; background:#fff; padding:10px 12px; border-radius:10px; cursor:pointer;}
     .btn:hover{background:#f7f7f7;}
-    .aframe-wrap{height:240px;} 
-     a-scene{height:240px; width:100%;}
+    .aframe-wrap{height:240px;}
+    a-scene{height:240px; width:100%;}
     .tiny{font-size:12px; color:#666; margin-top:8px; text-align:center;}
   </style>
 
@@ -32,16 +37,22 @@
 
   <!-- ======= EDIT ONLY THESE PATHS ======= -->
   <script>
-    const VIDEO_SRC = "videos/Gb24E-LqZyE_31.webm";   // e.g., "videos/demo.webm" or "demo.webm"
-    const AUDIO_GT  = "audios/Gb24E-LqZyE_31_gt.wav";        // e.g., "audio/s1_gt.wav"
-    const AUDIO_B1  = "audios/Gb24E-LqZyE_31_pred.wav";
-    const AUDIO_B2  = "audios/Gb24E-LqZyE_31_pred.wav";
-    const AUDIO_OURS= "audios/Gb24E-LqZyE_31_pred.wav";
+    // Tip: if you keep seeing old versions, bump VER
+    const VER = "v1";
+
+    const VIDEO_SRC = "videos/Gb24E-LqZyE_31.webm" + "?" + VER;
+    const AUDIO_GT  = "audios/Gb24E-LqZyE_31_gt.wav" + "?" + VER;
+    const AUDIO_B1  = "audios/Gb24E-LqZyE_31_pred.wav" + "?" + VER;
+    const AUDIO_B2  = "audios/Gb24E-LqZyE_31_pred.wav" + "?" + VER;
+    const AUDIO_OURS= "audios/Gb24E-LqZyE_31_pred.wav" + "?" + VER;
+
+    // If rotation sounds reversed, flip this between +1 and -1
+    const ROT_SIGN = -1;
   </script>
   <!-- ===================================== -->
 
   <div class="grid">
-    <div class="cell">
+    <div class="cell" id="cell-gt">
       <div class="head">GT</div>
       <button class="btn" id="btn-gt">Play / Resume</button>
       <div class="aframe-wrap" style="margin-top:10px;">
@@ -57,7 +68,7 @@
       <div class="tiny">video muted + FOA via Omnitone</div>
     </div>
 
-    <div class="cell">
+    <div class="cell" id="cell-b1">
       <div class="head">Baseline</div>
       <button class="btn" id="btn-b1">Play / Resume</button>
       <div class="aframe-wrap" style="margin-top:10px;">
@@ -73,7 +84,7 @@
       <div class="tiny">same video, different audio</div>
     </div>
 
-    <div class="cell">
+    <div class="cell" id="cell-b2">
       <div class="head">Baseline 2</div>
       <button class="btn" id="btn-b2">Play / Resume</button>
       <div class="aframe-wrap" style="margin-top:10px;">
@@ -89,7 +100,7 @@
       <div class="tiny">same video, different audio</div>
     </div>
 
-    <div class="cell">
+    <div class="cell" id="cell-ours">
       <div class="head">Ours</div>
       <button class="btn" id="btn-ours">Play / Resume</button>
       <div class="aframe-wrap" style="margin-top:10px;">
@@ -109,42 +120,44 @@
   <script>
     function setMediaSources() {
       const vids = ["v-gt","v-b1","v-b2","v-ours"].map(id => document.getElementById(id));
-      vids.forEach(v => { v.src = VIDEO_SRC; v.muted = true; v.loop = false; });
+      vids.forEach(v => {
+        v.src = VIDEO_SRC;
+        v.muted = true;      // IMPORTANT: keep webm audio silent
+        v.loop = false;      // play once (5s)
+      });
+
       document.getElementById("a-gt").src   = AUDIO_GT;
       document.getElementById("a-b1").src   = AUDIO_B1;
       document.getElementById("a-b2").src   = AUDIO_B2;
       document.getElementById("a-ours").src = AUDIO_OURS;
     }
 
+    // yaw -> 3x3 rotation matrix (row-major)
+    function yawToMat3_rowMajor(yawRad){
+      const c = Math.cos(yawRad), s = Math.sin(yawRad);
+      return [
+        c, 0, -s,
+        0, 1,  0,
+        s, 0,  c
+      ];
+    }
+
     async function bind(btnId, videoId, audioId) {
       const btn = document.getElementById(btnId);
       const video = document.getElementById(videoId);
       const audio = document.getElementById(audioId);
-      const sceneEl = video.closest("a-scene");
-      const camEl = sceneEl && sceneEl.querySelector("[camera]");
-      // update rotation ~30fps
-      setInterval(() => {
-        if (!camEl) return;
-        const rot = camEl.getAttribute("rotation"); // degrees
-        const yaw = (rot && rot.y ? rot.y : 0) * Math.PI / 180.0;
-        applyRotation(yaw);
-      }, 33);
 
-      
+      // WebAudio + Omnitone
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const r = Omnitone.createFOARenderer(ctx);
       await r.initialize();
-      function yawToMat3(yawRad){
-        // 右手系绕Y轴旋转
-        const c = Math.cos(yawRad), s = Math.sin(yawRad);
-        // 3x3 row-major
-        return [ c, 0, -s,
-           0, 1,  0,
-           s, 0,  c ];
-      }
 
-      function applyRotation(yawRad){
-        const m3 = yawToMat3(yawRad);
+      const src = ctx.createMediaElementSource(audio);
+      src.connect(r.input);
+      r.output.connect(ctx.destination);
+
+      function applyRotationYaw(yawRad){
+        const m3 = yawToMat3_rowMajor(ROT_SIGN * yawRad);
 
         // compatibility across builds
         if (typeof r.setRotationMatrix3 === "function") r.setRotationMatrix3(m3);
@@ -152,31 +165,59 @@
         else if (r._foaRotator && typeof r._foaRotator.setRotationMatrix3 === "function") r._foaRotator.setRotationMatrix3(m3);
       }
 
-      const src = ctx.createMediaElementSource(audio);
-      src.connect(r.input);
-      r.output.connect(ctx.destination);
+      // ===== IMPORTANT: robust way to get the correct scene + camera =====
+      // video is inside <a-assets>, so video.closest('a-scene') can be unreliable.
+      const cell = btn.closest(".cell");
+      const sceneEl = cell ? cell.querySelector("a-scene") : null;
 
+      let camEl = null;
+      function tryResolveCamera(){
+        if (!sceneEl) return null;
+        // best: sceneEl.camera.el (available after "loaded")
+        if (sceneEl.camera && sceneEl.camera.el) return sceneEl.camera.el;
+        // fallback: explicit <a-camera>
+        return sceneEl.querySelector("a-camera");
+      }
+
+      // start a render loop once the scene is loaded
+      if (sceneEl) {
+        sceneEl.addEventListener("loaded", () => {
+          camEl = tryResolveCamera();
+          const tick = () => {
+            if (camEl && camEl.object3D && camEl.object3D.rotation) {
+              const yaw = camEl.object3D.rotation.y; // radians, realtime
+              applyRotationYaw(yaw);
+            }
+            requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        });
+      }
+
+      // ===== playback =====
       btn.addEventListener("click", async () => {
         if (ctx.state !== "running") await ctx.resume();
         try {
+          // ensure start aligned
           await video.play();
           audio.currentTime = video.currentTime || 0;
           await audio.play();
         } catch(e) {
-          console.log(e);
-          alert("Playback blocked. Use Chrome on HTTPS (GitHub Pages), then click again.");
+          console.error(e);
+          alert("Audio failed: " + (e.name || "") + " " + (e.message || e));
         }
       });
 
-      // simple coupling
-      video.addEventListener("ended", () => {audio.pause();audio.currentTime = 0;});
+      // coupling
+      video.addEventListener("ended", () => { audio.pause(); audio.currentTime = 0; });
+      video.addEventListener("pause", () => { audio.pause(); });
       video.addEventListener("seeking", () => { audio.currentTime = video.currentTime || 0; });
     }
 
     setMediaSources();
-    bind("btn-gt", "v-gt", "a-gt");
-    bind("btn-b1", "v-b1", "a-b1");
-    bind("btn-b2", "v-b2", "a-b2");
+    bind("btn-gt",   "v-gt",   "a-gt");
+    bind("btn-b1",   "v-b1",   "a-b1");
+    bind("btn-b2",   "v-b2",   "a-b2");
     bind("btn-ours", "v-ours", "a-ours");
   </script>
 </body>
