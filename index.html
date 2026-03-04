@@ -120,7 +120,17 @@
       const btn = document.getElementById(btnId);
       const video = document.getElementById(videoId);
       const audio = document.getElementById(audioId);
+      const sceneEl = video.closest("a-scene");
+      const camEl = sceneEl && sceneEl.querySelector("[camera]");
+      // update rotation ~30fps
+      setInterval(() => {
+        if (!camEl) return;
+        const rot = camEl.getAttribute("rotation"); // degrees
+        const yaw = (rot && rot.y ? rot.y : 0) * Math.PI / 180.0;
+        applyRotation(yaw);
+      }, 33);
 
+      
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const r = Omnitone.createFOARenderer(ctx);
       await r.initialize();
@@ -159,7 +169,7 @@
       });
 
       // simple coupling
-      video.addEventListener("ended", () => { if (srcNode) srcNode.stop(); });
+      video.addEventListener("ended", () => {audio.pause();audio.currentTime = 0;});
       video.addEventListener("seeking", () => { audio.currentTime = video.currentTime || 0; });
     }
 
