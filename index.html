@@ -85,6 +85,23 @@
       gap: 10px;
       z-index: 10;
     }
+      /* ===== FIX: make overlay buttons clickable above A-Frame canvas ===== */
+      .viewer { position: relative; }
+      
+      /* A-Frame renders a canvas with class "a-canvas" */
+      .viewer .a-canvas { 
+        position: relative !important;
+        z-index: 1 !important;
+      }
+      
+      .viewer .overlay-controls{
+        z-index: 9999 !important;
+        pointer-events: auto !important;
+      }
+      
+      .viewer .ovbtn{
+        pointer-events: auto !important;
+      }
     .ovbtn{
       background: rgba(0,0,0,0.55);
       color: #fff;
