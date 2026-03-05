@@ -108,13 +108,14 @@
 /** ===== EDIT ONLY THIS SECTION ===== */
 const VER = "v5";
 const ROT_SIGN = -1;
+
 const SAMPLES = [
   {
     name: "Sample 1",
-    video: "videos/Gb24E-LqZyE_31.webm" + VER,
-    b1:    "audios/Gb24E-LqZyE_31_pred.wav" + VER,
-    b2:    "audios/Gb24E-LqZyE_31_pred.wav" + VER,
-    ours:  "audios/Gb24E-LqZyE_31_pred.wav" + VER,
+    video: "videos/Gb24E-LqZyE_31.webm?v=" + VER,
+    b1:    "audios/Gb24E-LqZyE_31_pred.wav?v=" + VER,
+    b2:    "audios/Gb24E-LqZyE_31_pred.wav?v=" + VER,
+    ours:  "audios/Gb24E-LqZyE_31_pred.wav?v=" + VER,
   },
 ];
 /** ================================ */
@@ -162,7 +163,6 @@ function estimateRMS(buffer, ch=0, n=20000){
   return Math.sqrt(s / Math.max(1,c));
 }
 
-async function createFOAPlayer(containerEl, label, audioUrl, getCameraYawRad){
 async function createFOAPlayer(containerEl, label, audioUrl, getCameraYawRad){
   containerEl.innerHTML = "";
 
@@ -363,9 +363,6 @@ async function createFOAPlayer(containerEl, label, audioUrl, getCameraYawRad){
       else pauseOmnitone();
     }
   };
-}
-
-function buildRow(sample, idx){
 }
 
 function buildRow(sample, idx){
