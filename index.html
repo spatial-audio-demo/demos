@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Anonymous Demo</title>
+  <title>spatial-audio-demo</title>
 
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
@@ -12,11 +12,9 @@
   <style>
     body{font-family:Arial, sans-serif; max-width:1280px; margin:0 auto; padding:28px; background:#fff; color:#111;}
     h1{margin:0 0 12px; text-align:center; font-size:28px; line-height:1.25;}
-
     .card{border:1px solid #e6e6e6; border-radius:14px; padding:14px; background:#fff; margin-bottom:14px;}
     .card h2{margin:0 0 8px; font-size:16px;}
     img{width:100%; border-radius:12px; border:1px solid #eee;}
-
     .note{margin:12px 0 18px; text-align:center; font-size:15px;}
     .note small{display:block; color:#666; margin-top:6px;}
 
@@ -24,41 +22,22 @@
     th,td{border-top:1px solid #eee; padding:10px; vertical-align:top; text-align:center;}
     th{font-size:13px; color:#333; background:#fafafa; border-top:1px solid #e6e6e6;}
 
-    .col-video{width:42%;}   /* smaller so 3 audio cols fit better */
+    .col-video{width:42%;}
     .col-audio{width:19.33%;}
 
-    .viewer{
-      position:relative;
-      border:1px solid #eee;
-      border-radius:14px;
-      overflow:hidden;
-      height:280px;          /* smaller than before */
-      background:#000;
-    }
+    .viewer{position:relative; border:1px solid #eee; border-radius:14px; overflow:hidden; height:280px; background:#000;}
     a-scene{height:280px; width:100%;}
-
     .rowtitle{font-weight:700; margin-bottom:8px; text-align:left; font-size:13px; color:#222;}
 
     .overlay-controls{
-      position:absolute;
-      left:50%;
-      bottom:16px;
-      transform:translateX(-50%);
-      display:flex;
-      gap:12px;
-      z-index:10;
-      pointer-events:auto;
+      position:absolute; left:50%; bottom:16px; transform:translateX(-50%);
+      display:flex; gap:12px; z-index:10; pointer-events:auto;
     }
     .ovbtn{
       border:2px solid rgba(255,255,255,0.85);
       background:rgba(0,0,0,0.25);
-      color:#fff;
-      padding:9px 14px;
-      border-radius:10px;
-      cursor:pointer;
-      font-size:14px;
-      backdrop-filter: blur(2px);
-      user-select:none;
+      color:#fff; padding:9px 14px; border-radius:10px; cursor:pointer; font-size:14px;
+      backdrop-filter: blur(2px); user-select:none;
     }
     .ovbtn:hover{background:rgba(0,0,0,0.35);}
 
@@ -75,6 +54,12 @@
       border:1px solid #ffd2d2; background:#fff4f4; color:#8b0000;
       border-radius:10px; font-size:12px; display:none; white-space:pre-wrap;
     }
+    #status{
+      position:fixed; right:12px; bottom:12px;
+      font-size:12px; color:#333; background:#fff;
+      border:1px solid #e6e6e6; border-radius:10px;
+      padding:8px 10px; box-shadow:0 2px 10px rgba(0,0,0,0.06);
+    }
   </style>
 
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
@@ -82,17 +67,17 @@
 </head>
 
 <body>
-  <h1>Visually-Guided Spatial Audio Demo</h1>
+  <h1>Visually-Guided Spatial Audio Generation for 360◦ In-the-Wild Speech Scenes</h1>
 
-  <!-- Abstract (top) -->
   <div class="card">
     <h2>Abstract</h2>
     <div style="line-height:1.55; font-size:13px; color:#222;">
-      Paste your abstract here (short version is fine for review).
+      Spatial audio is a key component of immersive 360◦ media, high-quality spatial capture remains limited in real-world speech dominant scenes. We study visually guided First-Order Ambisonics (FOA) speech spatialization in the wild: given aligned 360◦ video and an omnidirectional audio track, the goal is to recon7
+struct coherent spatial audio that remains stable under viewpoint changes. To support this task, we introduce YT-SPEECH, a speech-oriented 360◦ video-FOA dataset curated from YouTube. We propose a two-stage Localizer-Renderer framework, where an audio-visual segmentation backbone provides frame-wise
+spatial heatmaps and a conditional complex-domain U-Net reconstructs directional FOA signals from the omnidirectional channel. A confidence-based gating strategy stabilizes conditioning under ambiguous acoustic conditions. Experiments show improved reconstruction fidelity, spatial accuracy, and perceptual speech quality relative to ablated variants and prior approaches.
     </div>
   </div>
 
-  <!-- Framework (below abstract) -->
   <div class="card">
     <h2>Framework</h2>
     <img src="framework.png" alt="framework"/>
@@ -123,11 +108,12 @@
   </div>
 
   <div id="errbox"></div>
+  <div id="status">Audio: not started</div>
 
 <script>
 /** ===== EDIT ONLY THIS SECTION ===== */
-const VER = "v3";      // bump when debugging
-const ROT_SIGN = -1;   // flip to +1 if direction reversed
+const VER = "v4";
+const ROT_SIGN = -1;
 
 const SAMPLES = [
   {
@@ -137,7 +123,6 @@ const SAMPLES = [
     b2:    "audios/Gb24E-LqZyE_31_pred.wav?" + VER,
     ours:  "audios/Gb24E-LqZyE_31_pred.wav?" + VER,
   },
-  // add more rows...
 ];
 /** ================================ */
 
@@ -148,12 +133,31 @@ function showErr(e){
 }
 window.addEventListener("error", (ev) => showErr("JS Error: " + (ev.message || ev.error || "unknown")));
 
+function setStatus(t){ document.getElementById("status").textContent = t; }
+
 function yawToMat3_rowMajor(yawRad){
   const c = Math.cos(yawRad), s = Math.sin(yawRad);
   return [ c,0,-s,  0,1,0,  s,0,c ];
 }
 
-async function createFOABufferPlayer(containerEl, label, audioUrl, getCameraYawRad){
+/** ✅ One shared AudioContext for the whole page */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+setStatus("Audio: " + audioCtx.state);
+
+async function resumeAudio(){
+  if (audioCtx.state !== "running") await audioCtx.resume();
+  setStatus("Audio: " + audioCtx.state);
+}
+
+async function decodeBuffer(url){
+  const resp = await fetch(url, { mode:"cors" });
+  if (!resp.ok) throw new Error(`fetch failed ${resp.status} for ${url}`);
+  const arr = await resp.arrayBuffer();
+  const buf = await audioCtx.decodeAudioData(arr);
+  return buf;
+}
+
+async function createFOAPlayer(containerEl, label, audioUrl, getCameraYawRad){
   containerEl.innerHTML = "";
 
   const title = document.createElement("div");
@@ -183,10 +187,15 @@ async function createFOABufferPlayer(containerEl, label, audioUrl, getCameraYawR
   tiny.textContent = "FOA → binaural (Omnitone)";
   containerEl.appendChild(tiny);
 
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const r = Omnitone.createFOARenderer(ctx);
+  // Omnitone renderer (shares the global AudioContext)
+  const r = Omnitone.createFOARenderer(audioCtx);
   await r.initialize();
-  r.output.connect(ctx.destination);
+
+  // Optional gain boost (in case your files are quiet)
+  const gain = audioCtx.createGain();
+  gain.gain.value = 1.2;
+  r.output.connect(gain);
+  gain.connect(audioCtx.destination);
 
   function applyYaw(yawRad){
     const m3 = yawToMat3_rowMajor(ROT_SIGN * yawRad);
@@ -195,37 +204,42 @@ async function createFOABufferPlayer(containerEl, label, audioUrl, getCameraYawR
     else if (r._foaRotator && typeof r._foaRotator.setRotationMatrix3 === "function") r._foaRotator.setRotationMatrix3(m3);
   }
 
-  // decode FOA buffer (multi-channel safe)
-  async function loadBuffer(url){
-    const resp = await fetch(url, { mode: "cors" });
-    if (!resp.ok) throw new Error(`fetch failed ${resp.status} for ${url}`);
-    const arr = await resp.arrayBuffer();
-    return await ctx.decodeAudioData(arr);
-  }
+  // continuous rotation update
+  (function tick(){
+    applyYaw(getCameraYawRad());
+    requestAnimationFrame(tick);
+  })();
 
   let buffer = null;
   let srcNode = null;
   let isPlaying = false;
-  let startedAt = 0;     // ctx.currentTime when started
-  let offset = 0;        // seconds into buffer
+  let startedAt = 0;
+  let offset = 0;
 
   async function ensureLoaded(){
-    if (!buffer) buffer = await loadBuffer(audioUrl);
+    if (!buffer) {
+      buffer = await decodeBuffer(audioUrl);
+      // small debug hint
+      tiny.textContent = `FOA → binaural (Omnitone) · loaded ${buffer.numberOfChannels}ch`;
+    }
   }
 
   function startFrom(sec){
     if (!buffer) return;
     if (srcNode) { try { srcNode.stop(); } catch(e){} }
-    srcNode = ctx.createBufferSource();
+    srcNode = audioCtx.createBufferSource();
     srcNode.buffer = buffer;
     srcNode.connect(r.input);
-    startedAt = ctx.currentTime;
+
     offset = Math.max(0, Math.min(sec, buffer.duration - 0.001));
+    startedAt = audioCtx.currentTime;
     srcNode.start(0, offset);
+
     isPlaying = true;
     btnPlay.textContent = "Pause";
+
     srcNode.onended = () => {
-      // If naturally ended
+      // Only treat as ended if we didn't pause manually
       if (isPlaying) {
         isPlaying = false;
         offset = 0;
@@ -236,7 +250,7 @@ async function createFOABufferPlayer(containerEl, label, audioUrl, getCameraYawR
 
   function pause(){
     if (!isPlaying) return;
-    const played = ctx.currentTime - startedAt;
+    const played = audioCtx.currentTime - startedAt;
     offset = offset + played;
     if (srcNode) { try { srcNode.stop(); } catch(e){} }
     isPlaying = false;
@@ -250,36 +264,21 @@ async function createFOABufferPlayer(containerEl, label, audioUrl, getCameraYawR
     btnPlay.textContent = "Play";
   }
 
-  function rewind(){
-    offset = 0;
-    if (isPlaying) startFrom(0);
-  }
-
-  // rotation update loop
-  (function tick(){
-    applyYaw(getCameraYawRad());
-    requestAnimationFrame(tick);
-  })();
-
   btnPlay.addEventListener("click", async () => {
     try {
-      if (ctx.state !== "running") await ctx.resume();
+      await resumeAudio();
       await ensureLoaded();
       if (!isPlaying) startFrom(offset);
       else pause();
-    } catch(e) {
-      showErr("Audio failed: " + (e.name||"") + " " + (e.message||e));
-    }
+    } catch(e) { showErr(e); }
   });
 
   btnRew.addEventListener("click", async () => {
     try {
-      if (ctx.state !== "running") await ctx.resume();
+      await resumeAudio();
       await ensureLoaded();
       startFrom(0);
-    } catch(e) {
-      showErr("Rewind failed: " + (e.name||"") + " " + (e.message||e));
-    }
+    } catch(e) { showErr(e); }
   });
 
   btnStop.addEventListener("click", () => stop());
@@ -287,8 +286,6 @@ async function createFOABufferPlayer(containerEl, label, audioUrl, getCameraYawR
 
 function buildRow(sample, idx){
   const tbody = document.getElementById("samples-body");
-  if (!tbody) throw new Error("Cannot find #samples-body");
-
   const tr = document.createElement("tr");
 
   // Video cell
@@ -334,26 +331,16 @@ function buildRow(sample, idx){
   const btnPP = viewer.querySelector('[data-role="pp"]');
   const btnRew = viewer.querySelector('[data-role="rew"]');
 
-  if (!v || !btnPP || !btnRew) throw new Error("Video overlay controls not found.");
-
-  // Link videosphere to the video element
+  // Link videosphere to video element
   const vidDomId = `viddom-${idx}`;
   v.id = vidDomId;
-  const sphere = viewer.querySelector('[data-role="sphere"]');
-  sphere.setAttribute("src", `#${vidDomId}`);
+  viewer.querySelector('[data-role="sphere"]').setAttribute("src", `#${vidDomId}`);
 
   // Camera yaw
   let camEl = null;
   const sceneEl = viewer.querySelector("a-scene");
-
-  function getCameraYawRad(){
-    if (!camEl) return 0;
-    return camEl.object3D.rotation.y;
-  }
-
-  sceneEl.addEventListener("loaded", () => {
-    camEl = (sceneEl.camera && sceneEl.camera.el) ? sceneEl.camera.el : sceneEl.querySelector("a-camera");
-  });
+  function getCameraYawRad(){ return camEl ? camEl.object3D.rotation.y : 0; }
+  sceneEl.addEventListener("loaded", () => { camEl = (sceneEl.camera && sceneEl.camera.el) ? sceneEl.camera.el : sceneEl.querySelector("a-camera"); });
 
   async function playVideo(){
     v.muted = true;
@@ -365,25 +352,19 @@ function buildRow(sample, idx){
     try {
       if (v.paused) { await playVideo(); btnPP.textContent="Pause"; }
       else { v.pause(); btnPP.textContent="Play"; }
-    } catch(e) { showErr("Video failed: " + (e.name||"") + " " + (e.message||e)); }
+    } catch(e) { showErr(e); }
   });
-
   btnRew.addEventListener("click", async () => {
-    try {
-      v.currentTime = 0;
-      await playVideo();
-      btnPP.textContent="Pause";
-    } catch(e) { showErr("Video rewind failed: " + (e.name||"") + " " + (e.message||e)); }
+    try { v.currentTime = 0; await playVideo(); btnPP.textContent="Pause"; } catch(e) { showErr(e); }
   });
-
   v.addEventListener("ended", () => btnPP.textContent="Play");
 
-  // Create audio players (buffer-based, not <audio>)
+  // Create audio players
   (async () => {
     try {
-      await createFOABufferPlayer(tdB1, "Baseline",   sample.b1, getCameraYawRad);
-      await createFOABufferPlayer(tdB2, "Baseline 2", sample.b2, getCameraYawRad);
-      await createFOABufferPlayer(tdO,  "Ours",       sample.ours, getCameraYawRad);
+      await createFOAPlayer(tdB1, "Baseline",   sample.b1, getCameraYawRad);
+      await createFOAPlayer(tdB2, "Baseline 2", sample.b2, getCameraYawRad);
+      await createFOAPlayer(tdO,  "Ours",       sample.ours, getCameraYawRad);
     } catch(e) { showErr(e); }
   })();
 }
@@ -391,12 +372,15 @@ function buildRow(sample, idx){
 document.addEventListener("DOMContentLoaded", () => {
   try {
     if (!Array.isArray(SAMPLES) || SAMPLES.length === 0) {
-      showErr("SAMPLES is empty. Add at least one sample row in the SAMPLES array.");
+      showErr("SAMPLES is empty.");
       return;
     }
     SAMPLES.forEach((s, i) => buildRow(s, i));
   } catch(e) { showErr(e); }
 });
+
+// Helpful: also resume audio when user clicks anywhere (safe for Chrome policies)
+document.addEventListener("pointerdown", () => { resumeAudio().catch(()=>{}); }, { once:false });
 </script>
 
 </body>
