@@ -20,7 +20,7 @@
          --viewer-h : each 360 video height. Smaller = easier to fit 4 videos.
       */
 
-      /* ====== TUNE THESE TWO TO FIT 4 VIDEOS IN ONE ROW ===== = */
+      /* ====== TUNE THESE TWO TO FIT 4 VIDEOS IN ONE ROW ====== */
       --page-max: 1800px;   /* make larger if your screen is wide */
       --viewer-h: 230px;    /* video height for each column */
       /* ======================================================= */
@@ -157,15 +157,15 @@
  *  ========================= */
 const ROT_SIGN = -1;
 
- // Each sample has multiple columns. Each column has its own (video + FOA audio).
- // Put the SAME video in each column if you want, and different audio for each model.
+// Each sample has multiple columns. Each column has its own (video + FOA audio).
+// Put the SAME video in each column if you want, and different audio for each model.
 const SAMPLES = [
   {
     name: "Sample 1",
     cols: [
       { title: "GT",        video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_gt.wav" },
-      { title: "Baseline",  video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_pred.wav" },
-      { title: "Baseline 2",video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_pred.wav" },
+      { title: "Baseline",  video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_baseline.wav" },
+      { title: "Baseline 2",video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_baseline2.wav" },
       { title: "Ours",      video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_pred.wav" },
     ],
   },
@@ -220,7 +220,7 @@ function yawToMat3_rowMajor(yaw){
            0, 1,  0,
            s, 0,  c ];
 }
-  
+
 /** ===== Player factory (FOA -> Omnitone) =====
  * OVERLAY-ONLY VERSION:
  *  - We REMOVE the big button panel under each video.
