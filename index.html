@@ -5,10 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>spatial-audio-demo</title>
 
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-
   <style>
     body{font-family:Arial, sans-serif; max-width:1280px; margin:0 auto; padding:28px; background:#fff; color:#111;}
     h1{margin:0 0 12px; text-align:center; font-size:28px; line-height:1.25;}
@@ -43,10 +39,10 @@
 
     .btn{border:1px solid #ddd; background:#fff; padding:9px 10px; border-radius:10px; cursor:pointer; font-size:13px; width:100%;}
     .btn:hover{background:#f7f7f7;}
-    .btnrow{display:flex; gap:8px; margin-top:8px;}
-    .btnmini{flex:1; border:1px solid #ddd; background:#fff; padding:8px 8px; border-radius:10px; cursor:pointer; font-size:12px;}
+    .btnrow{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;}
+    .btnmini{flex:1; min-width:72px; border:1px solid #ddd; background:#fff; padding:8px 8px; border-radius:10px; cursor:pointer; font-size:12px;}
     .btnmini:hover{background:#f7f7f7;}
-    .tiny{font-size:11px; color:#666; margin-top:6px; text-align:left;}
+    .tiny{font-size:11px; color:#666; margin-top:6px; text-align:left; line-height:1.35;}
     .footer{margin-top:14px; font-size:12px; color:#666;}
 
     #errbox{
@@ -72,9 +68,7 @@
   <div class="card">
     <h2>Abstract</h2>
     <div style="line-height:1.55; font-size:13px; color:#222;">
-      Spatial audio is a key component of immersive 360◦ media, high-quality spatial capture remains limited in real-world speech dominant scenes. We study visually guided First-Order Ambisonics (FOA) speech spatialization in the wild: given aligned 360◦ video and an omnidirectional audio track, the goal is to recon7
-struct coherent spatial audio that remains stable under viewpoint changes. To support this task, we introduce YT-SPEECH, a speech-oriented 360◦ video-FOA dataset curated from YouTube. We propose a two-stage Localizer-Renderer framework, where an audio-visual segmentation backbone provides frame-wise
-spatial heatmaps and a conditional complex-domain U-Net reconstructs directional FOA signals from the omnidirectional channel. A confidence-based gating strategy stabilizes conditioning under ambiguous acoustic conditions. Experiments show improved reconstruction fidelity, spatial accuracy, and perceptual speech quality relative to ablated variants and prior approaches.
+      (your abstract)
     </div>
   </div>
 
@@ -112,9 +106,8 @@ spatial heatmaps and a conditional complex-domain U-Net reconstructs directional
 
 <script>
 /** ===== EDIT ONLY THIS SECTION ===== */
-const VER = "v4";
+const VER = "v5";
 const ROT_SIGN = -1;
-
 const SAMPLES = [
   {
     name: "Sample 1",
@@ -140,7 +133,7 @@ function yawToMat3_rowMajor(yawRad){
   return [ c,0,-s,  0,1,0,  s,0,c ];
 }
 
-/** ✅ One shared AudioContext for the whole page */
+/** Single shared AudioContext */
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 setStatus("Audio: " + audioCtx.state);
 
@@ -149,12 +142,24 @@ async function resumeAudio(){
   setStatus("Audio: " + audioCtx.state);
 }
 
+/** decode wav */
 async function decodeBuffer(url){
-  const resp = await fetch(url, { mode:"cors" });
+  const resp = await fetch(url);
   if (!resp.ok) throw new Error(`fetch failed ${resp.status} for ${url}`);
   const arr = await resp.arrayBuffer();
-  const buf = await audioCtx.decodeAudioData(arr);
-  return buf;
+  return await audioCtx.decodeAudioData(arr);
+}
+
+/** simple RMS for sanity */
+function estimateRMS(buffer, ch=0, n=20000){
+  const data = buffer.getChannelData(ch);
+  const step = Math.max(1, Math.floor(data.length / n));
+  let s = 0, c = 0;
+  for (let i=0; i<data.length; i+=step){
+    const v = data[i];
+    s += v*v; c++;
+  }
+  return Math.sqrt(s / Math.max(1,c));
 }
 
 async function createFOAPlayer(containerEl, label, audioUrl, getCameraYawRad){
@@ -167,35 +172,48 @@ async function createFOAPlayer(containerEl, label, audioUrl, getCameraYawRad){
 
   const btnPlay = document.createElement("button");
   btnPlay.className = "btn";
-  btnPlay.textContent = "Play";
+  btnPlay.textContent = "Play (Omnitone)";
   containerEl.appendChild(btnPlay);
 
   const btnRow = document.createElement("div");
   btnRow.className = "btnrow";
+
   const btnRew = document.createElement("button");
   btnRew.className = "btnmini";
   btnRew.textContent = "Rewind";
+
   const btnStop = document.createElement("button");
   btnStop.className = "btnmini";
   btnStop.textContent = "Stop";
+
+  const btnBeep = document.createElement("button");
+  btnBeep.className = "btnmini";
+  btnBeep.textContent = "Beep";
+
+  const btnDry = document.createElement("button");
+  btnDry.className = "btnmini";
+  btnDry.textContent = "Dry W";
+
   btnRow.appendChild(btnRew);
   btnRow.appendChild(btnStop);
+  btnRow.appendChild(btnBeep);
+  btnRow.appendChild(btnDry);
   containerEl.appendChild(btnRow);
 
   const tiny = document.createElement("div");
   tiny.className = "tiny";
-  tiny.textContent = "FOA → binaural (Omnitone)";
+  tiny.textContent = "Loading status: not loaded";
   containerEl.appendChild(tiny);
 
-  // Omnitone renderer (shares the global AudioContext)
+  // Omnitone renderer
   const r = Omnitone.createFOARenderer(audioCtx);
   await r.initialize();
 
-  // Optional gain boost (in case your files are quiet)
-  const gain = audioCtx.createGain();
-  gain.gain.value = 1.2;
-  r.output.connect(gain);
-  gain.connect(audioCtx.destination);
+  // output gain (make it obvious)
+  const gainOut = audioCtx.createGain();
+  gainOut.gain.value = 3.0;          // stronger boost for debug
+  r.output.connect(gainOut);
+  gainOut.connect(audioCtx.destination);
 
   function applyYaw(yawRad){
     const m3 = yawToMat3_rowMajor(ROT_SIGN * yawRad);
@@ -203,91 +221,128 @@ async function createFOAPlayer(containerEl, label, audioUrl, getCameraYawRad){
     else if (typeof r.setRotationMatrix === "function") r.setRotationMatrix(m3);
     else if (r._foaRotator && typeof r._foaRotator.setRotationMatrix3 === "function") r._foaRotator.setRotationMatrix3(m3);
   }
-
-  // continuous rotation update
-  (function tick(){
-    applyYaw(getCameraYawRad());
-    requestAnimationFrame(tick);
-  })();
+  (function tick(){ applyYaw(getCameraYawRad()); requestAnimationFrame(tick); })();
 
   let buffer = null;
   let srcNode = null;
+  let dryNode = null;
   let isPlaying = false;
   let startedAt = 0;
   let offset = 0;
 
-  async function ensureLoaded(){
+  async function ensureLoaded(){ // <-- 只在这个 createFOAPlayer 里有一个 ensureLoaded
     if (!buffer) {
       buffer = await decodeBuffer(audioUrl);
-      // small debug hint
-      tiny.textContent = `FOA → binaural (Omnitone) · loaded ${buffer.numberOfChannels}ch`;
+      const rms0 = estimateRMS(buffer, 0);
+      tiny.textContent =
+        `loaded ${buffer.numberOfChannels}ch · ${buffer.sampleRate} Hz · ${buffer.duration.toFixed(2)} s · rms(W)=${rms0.toExponential(2)}`;
     }
   }
 
-  function startFrom(sec){
+  function stopAll(){
+    if (srcNode) { try { srcNode.stop(); } catch(e){} srcNode = null; }
+    if (dryNode) { try { dryNode.stop(); } catch(e){} dryNode = null; }
+    isPlaying = false;
+    offset = 0;
+    btnPlay.textContent = "Play (Omnitone)";
+  }
+
+  function startOmnitone(sec){
     if (!buffer) return;
     if (srcNode) { try { srcNode.stop(); } catch(e){} }
     srcNode = audioCtx.createBufferSource();
     srcNode.buffer = buffer;
+
+    // Explicit channel wiring: Buffer(4ch) -> splitter -> Omnitone input
     const splitter = audioCtx.createChannelSplitter(4);
     srcNode.connect(splitter);
-
-    splitter.connect(r.input,0,0);
-    splitter.connect(r.input,1,1);
-    splitter.connect(r.input,2,2);
-    splitter.connect(r.input,3,3);
+    splitter.connect(r.input, 0, 0);
+    splitter.connect(r.input, 1, 1);
+    splitter.connect(r.input, 2, 2);
+    splitter.connect(r.input, 3, 3);
 
     offset = Math.max(0, Math.min(sec, buffer.duration - 0.001));
     startedAt = audioCtx.currentTime;
     srcNode.start(0, offset);
 
     isPlaying = true;
-    btnPlay.textContent = "Pause";
+    btnPlay.textContent = "Pause (Omnitone)";
 
     srcNode.onended = () => {
-      // Only treat as ended if we didn't pause manually
       if (isPlaying) {
         isPlaying = false;
         offset = 0;
-        btnPlay.textContent = "Play";
+        btnPlay.textContent = "Play (Omnitone)";
       }
     };
   }
 
-  function pause(){
+  function pauseOmnitone(){
     if (!isPlaying) return;
     const played = audioCtx.currentTime - startedAt;
     offset = offset + played;
     if (srcNode) { try { srcNode.stop(); } catch(e){} }
     isPlaying = false;
-    btnPlay.textContent = "Play";
+    btnPlay.textContent = "Play (Omnitone)";
   }
 
-  function stop(){
-    if (srcNode) { try { srcNode.stop(); } catch(e){} }
-    isPlaying = false;
-    offset = 0;
-    btnPlay.textContent = "Play";
-  }
-
+  // ----- Buttons -----
   btnPlay.addEventListener("click", async () => {
-    try {
+    try{
       await resumeAudio();
       await ensureLoaded();
-      if (!isPlaying) startFrom(offset);
-      else pause();
-    } catch(e) { showErr(e); }
+      if (!isPlaying) startOmnitone(offset);
+      else pauseOmnitone();
+    } catch(e){ showErr(e); }
   });
 
   btnRew.addEventListener("click", async () => {
-    try {
+    try{
       await resumeAudio();
       await ensureLoaded();
-      startFrom(0);
-    } catch(e) { showErr(e); }
+      startOmnitone(0);
+    } catch(e){ showErr(e); }
   });
 
-  btnStop.addEventListener("click", () => stop());
+  btnStop.addEventListener("click", () => stopAll());
+
+  // Beep: if this is silent -> browser output issue (not your wav / not Omnitone)
+  btnBeep.addEventListener("click", async () => {
+    try{
+      await resumeAudio();
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      g.gain.value = 0.12;
+      osc.frequency.value = 440;
+      osc.connect(g); g.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.35);
+    } catch(e){ showErr(e); }
+  });
+
+  // Dry W: bypass Omnitone, play channel-0 directly
+  btnDry.addEventListener("click", async () => {
+    try{
+      await resumeAudio();
+      await ensureLoaded();
+
+      if (dryNode) { try { dryNode.stop(); } catch(e){} dryNode = null; }
+
+      const src = audioCtx.createBufferSource();
+      src.buffer = buffer;
+
+      const splitter = audioCtx.createChannelSplitter(buffer.numberOfChannels);
+      const g = audioCtx.createGain();
+      g.gain.value = 0.8;
+
+      src.connect(splitter);
+      splitter.connect(g, 0); // W channel only
+      g.connect(audioCtx.destination);
+
+      src.start(0, 0);
+      dryNode = src;
+    } catch(e){ showErr(e); }
+  });
 }
 
 function buildRow(sample, idx){
@@ -337,7 +392,6 @@ function buildRow(sample, idx){
   const btnPP = viewer.querySelector('[data-role="pp"]');
   const btnRew = viewer.querySelector('[data-role="rew"]');
 
-  // Link videosphere to video element
   const vidDomId = `viddom-${idx}`;
   v.id = vidDomId;
   viewer.querySelector('[data-role="sphere"]').setAttribute("src", `#${vidDomId}`);
@@ -346,7 +400,9 @@ function buildRow(sample, idx){
   let camEl = null;
   const sceneEl = viewer.querySelector("a-scene");
   function getCameraYawRad(){ return camEl ? camEl.object3D.rotation.y : 0; }
-  sceneEl.addEventListener("loaded", () => { camEl = (sceneEl.camera && sceneEl.camera.el) ? sceneEl.camera.el : sceneEl.querySelector("a-camera"); });
+  sceneEl.addEventListener("loaded", () => {
+    camEl = (sceneEl.camera && sceneEl.camera.el) ? sceneEl.camera.el : sceneEl.querySelector("a-camera");
+  });
 
   async function playVideo(){
     v.muted = true;
@@ -377,15 +433,10 @@ function buildRow(sample, idx){
 
 document.addEventListener("DOMContentLoaded", () => {
   try {
-    if (!Array.isArray(SAMPLES) || SAMPLES.length === 0) {
-      showErr("SAMPLES is empty.");
-      return;
-    }
     SAMPLES.forEach((s, i) => buildRow(s, i));
   } catch(e) { showErr(e); }
 });
 
-// Helpful: also resume audio when user clicks anywhere (safe for Chrome policies)
 document.addEventListener("pointerdown", () => { resumeAudio().catch(()=>{}); }, { once:false });
 </script>
 
