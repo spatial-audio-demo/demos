@@ -5,217 +5,273 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>spatial-audio-demo</title>
 
+  <!-- A-Frame (360 video) -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+
+  <!-- Omnitone (FOA -> binaural) -->
+  <script src="https://cdn.jsdelivr.net/npm/omnitone@0.3.2/build/omnitone.min.js"></script>
+
   <style>
-    body{font-family:Arial, sans-serif; max-width:1280px; margin:0 auto; padding:28px; background:#fff; color:#111;}
-    h1{margin:0 0 12px; text-align:center; font-size:28px; line-height:1.25;}
-    .card{border:1px solid #e6e6e6; border-radius:14px; padding:14px; background:#fff; margin-bottom:14px;}
-    .card h2{margin:0 0 8px; font-size:16px;}
-    img{width:100%; border-radius:12px; border:1px solid #eee;}
-    .note{margin:12px 0 18px; text-align:center; font-size:15px;}
-    .note small{display:block; color:#666; margin-top:6px;}
+    :root{
+      /* ====== TUNE THESE TWO TO FIT 4 VIDEOS IN ONE ROW ====== */
+      --page-max: 1800px;   /* make larger if your screen is wide */
+      --viewer-h: 230px;    /* video height for each column */
+      /* ======================================================= */
 
-    table{width:100%; border-collapse:collapse; table-layout:fixed;}
-    th,td{border-top:1px solid #eee; padding:10px; vertical-align:top; text-align:center;}
-    th{font-size:13px; color:#333; background:#fafafa; border-top:1px solid #e6e6e6;}
+      --radius: 14px;
+      --border: #ececec;
+      --muted: #666;
+    }
 
-    .col-video{width:42%;}
-    .col-audio{width:19.33%;}
+    body{
+      font-family: Arial, sans-serif;
+      max-width: var(--page-max);
+      margin: 0 auto;
+      padding: 22px;
+      background: #fff;
+      color: #111;
+    }
 
-    .viewer{position:relative; border:1px solid #eee; border-radius:14px; overflow:hidden; height:280px; background:#000;}
-    a-scene{height:280px; width:100%;}
-    .rowtitle{font-weight:700; margin-bottom:8px; text-align:left; font-size:13px; color:#222;}
+    h1{margin:0 0 10px 0; font-size: 26px;}
+    .hint{margin: 4px 0 16px 0; color: #222; text-align:center; font-weight:600;}
+    .tiny{margin-top:8px; color: var(--muted); font-size: 12px; line-height: 1.35;}
+
+    .card{
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      margin: 14px 0;
+      background:#fff;
+    }
+
+    table{width:100%; border-collapse: collapse; table-layout: fixed;}
+    th, td{border-top: 1px solid #f0f0f0; padding: 12px; vertical-align: top;}
+    thead th{border-top: none; padding-top: 6px; padding-bottom: 14px; font-size: 15px;}
+    th{color:#111; font-weight:700; text-align:center;}
+    td{padding-top: 10px;}
+
+    /* 4 columns */
+    col.col{width:25%;}
+
+    .cellTitle{
+      font-weight: 800;
+      margin: 2px 0 10px 0;
+      font-size: 14px;
+      text-align: left;
+    }
+
+    .viewer{
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      height: var(--viewer-h);
+      background: #000;
+    }
+    a-scene{height: var(--viewer-h); width:100%;}
 
     .overlay-controls{
-      position:absolute; left:50%; bottom:16px; transform:translateX(-50%);
-      display:flex; gap:12px; z-index:10; pointer-events:auto;
+      position:absolute;
+      left: 12px;
+      bottom: 12px;
+      display:flex;
+      gap: 10px;
+      z-index: 10;
     }
     .ovbtn{
-      border:2px solid rgba(255,255,255,0.85);
-      background:rgba(0,0,0,0.25);
-      color:#fff; padding:9px 14px; border-radius:10px; cursor:pointer; font-size:14px;
-      backdrop-filter: blur(2px); user-select:none;
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      border: 2px solid rgba(255,255,255,0.7);
+      border-radius: 12px;
+      padding: 10px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      user-select: none;
+      backdrop-filter: blur(2px);
     }
-    .ovbtn:hover{background:rgba(0,0,0,0.35);}
+    .ovbtn:active{transform: translateY(1px);}
 
-    .btn{border:1px solid #ddd; background:#fff; padding:9px 10px; border-radius:10px; cursor:pointer; font-size:13px; width:100%;}
-    .btn:hover{background:#f7f7f7;}
-    .btnrow{display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;}
-    .btnmini{flex:1; min-width:72px; border:1px solid #ddd; background:#fff; padding:8px 8px; border-radius:10px; cursor:pointer; font-size:12px;}
-    .btnmini:hover{background:#f7f7f7;}
-    .tiny{font-size:11px; color:#666; margin-top:6px; text-align:left; line-height:1.35;}
-    .footer{margin-top:14px; font-size:12px; color:#666;}
-
-    #errbox{
-      margin-top:12px; padding:10px 12px;
-      border:1px solid #ffd2d2; background:#fff4f4; color:#8b0000;
-      border-radius:10px; font-size:12px; display:none; white-space:pre-wrap;
+    .btn{
+      width:100%;
+      border: 1px solid #ddd;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 700;
+      background:#fff;
+      cursor:pointer;
     }
-    #status{
-      position:fixed; right:12px; bottom:12px;
-      font-size:12px; color:#333; background:#fff;
-      border:1px solid #e6e6e6; border-radius:10px;
-      padding:8px 10px; box-shadow:0 2px 10px rgba(0,0,0,0.06);
+    .btnrow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .btnmini{
+      border: 1px solid #ddd;
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-weight: 700;
+      background:#fff;
+      cursor:pointer;
+    }
+
+    .footer{
+      margin-top: 10px;
+      color: #555;
+      font-size: 14px;
+    }
+
+    /* responsive: if screen is narrow, stack columns */
+    @media (max-width: 1100px){
+      col.col{width:auto;}
+      table, thead, tbody, tr, th, td{display:block;}
+      thead{display:none;}
+      tr{border-top:1px solid #eee;}
+      td{border-top:none;}
+      .viewer{height: 260px;}
+      a-scene{height: 260px;}
+    }
+
+    .err{
+      margin-top: 10px;
+      background:#ffecec;
+      border:1px solid #ffb3b3;
+      color:#7a0000;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      white-space: pre-wrap;
     }
   </style>
-
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <script src="https://www.gstatic.com/external_hosted/omnitone/build/omnitone.min.js"></script>
 </head>
 
 <body>
-  <h1>Visually-Guided Spatial Audio Generation for 360◦ In-the-Wild Speech Scenes(BUILD-0305-AAA)</h1>
+  <h1>Visually-Guided Spatial Audio Generation for 360° In-the-Wild Speech Scenes</h1>
+  <div class="hint">🎧 Please wear headphones and drag the video to experience spatial audio rotation.</div>
 
   <div class="card">
-    <h2>Abstract</h2>
-    <div style="line-height:1.55; font-size:13px; color:#222;">
-      (your abstract)
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>Framework</h2>
-    <img src="net_v12.png" alt="framework"/>
-    <div class="tiny">Figure: Overview of the proposed framework.</div>
-  </div>
-
-  <div class="note">
-    🎧 <b>Please wear headphones and drag the video to experience 360° spatial rotation</b> 🎥
-    <small>(Rotation is driven by your view direction in the 360° player.)</small>
-  </div>
-
-  <div class="card" style="padding:0;">
     <table>
+      <colgroup id="colgroup">
+        <!-- injected -->
+      </colgroup>
       <thead>
-        <tr>
-          <th class="col-video">GT (360° Video)</th>
-          <th class="col-audio">Baseline</th>
-          <th class="col-audio">Baseline 2</th>
-          <th class="col-audio">Ours</th>
+        <tr id="thead-row">
+          <!-- injected -->
         </tr>
       </thead>
-      <tbody id="samples-body"></tbody>
+      <tbody id="samples-body">
+        <!-- injected -->
+      </tbody>
     </table>
-  </div>
 
-  <div class="footer">
-    We would like to thank Omnitone for the 360° interactive spatial audio rendering.
+    <div class="footer">We would like to thank Omnitone for the 360° interactive spatial audio rendering.</div>
+    <div id="errbox" class="err" style="display:none;"></div>
   </div>
-
-  <div id="errbox"></div>
-  <div id="status">Audio: not started</div>
 
 <script>
-/** ===== EDIT ONLY THIS SECTION ===== */
-const VER = "v5";
+/** =========================
+ *  EDIT THIS SECTION ONLY
+ *  ========================= */
 const ROT_SIGN = -1;
 
+// Each sample has multiple columns. Each column has its own (video + FOA audio).
+// Put the SAME video in each column if you want, and different audio for each model.
+/* ============================================================
+   EDIT SAMPLES HERE
+   - Add/remove columns by editing `cols: [...]`
+   - Each column has its own 360 video + its own FOA wav
+   - You can reuse the same video for all columns (recommended)
+   ============================================================ */
 const SAMPLES = [
   {
     name: "Sample 1",
-    video: "videos/Gb24E-LqZyE_31.webm?v=" + VER,
-    b1:    "audios/Gb24E-LqZyE_31_pred.wav?v=" + VER,
-    b2:    "audios/Gb24E-LqZyE_31_pred.wav?v=" + VER,
-    ours:  "audios/Gb24E-LqZyE_31_pred.wav?v=" + VER,
+    cols: [
+      { title: "GT",        video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_gt.wav" },
+      { title: "Baseline",  video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_pred.wav" },
+      { title: "Baseline 2",video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_pred.wav" },
+      { title: "Ours",      video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_pred.wav" },
+    ],
   },
 ];
-/** ================================ */
+
+// If you later want 5 columns, just add one more item in cols[].
+// If you want fewer, delete an item.
+/** ========================= */
+
+
+/** ===== Helpers / Audio ===== */
+let audioCtx = null;
 
 function showErr(e){
+  console.error(e);
   const box = document.getElementById("errbox");
   box.style.display = "block";
-  box.textContent = String(e && e.stack ? e.stack : e);
+  box.textContent = (e && e.stack) ? e.stack : String(e);
 }
-window.addEventListener("error", (ev) => showErr("JS Error: " + (ev.message || ev.error || "unknown")));
-
-function setStatus(t){ document.getElementById("status").textContent = t; }
-
-function yawToMat3_rowMajor(yawRad){
-  const c = Math.cos(yawRad), s = Math.sin(yawRad);
-  return [ c,0,-s,  0,1,0,  s,0,c ];
-}
-
-/** Single shared AudioContext */
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-setStatus("Audio: " + audioCtx.state);
 
 async function resumeAudio(){
-  if (audioCtx.state !== "running") await audioCtx.resume();
-  setStatus("Audio: " + audioCtx.state);
-}
-
-/** decode wav */
-async function decodeBuffer(url){
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error(`fetch failed ${resp.status} for ${url}`);
-  const arr = await resp.arrayBuffer();
-  return await audioCtx.decodeAudioData(arr);
-}
-
-/** simple RMS for sanity */
-function estimateRMS(buffer, ch=0, n=20000){
-  const data = buffer.getChannelData(ch);
-  const step = Math.max(1, Math.floor(data.length / n));
-  let s = 0, c = 0;
-  for (let i=0; i<data.length; i+=step){
-    const v = data[i];
-    s += v*v; c++;
+  if (!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
   }
-  return Math.sqrt(s / Math.max(1,c));
+  if (audioCtx.state !== "running"){
+    await audioCtx.resume();
+  }
 }
 
-async function createFOAPlayer(containerEl, label, audioUrl, getCameraYawRad){
-  containerEl.innerHTML = "";
+async function decodeBuffer(url){
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Fetch failed ${res.status}: ${url}`);
+  const ab = await res.arrayBuffer();
+  await resumeAudio();
+  return await audioCtx.decodeAudioData(ab);
+}
 
-  const title = document.createElement("div");
-  title.className = "rowtitle";
-  title.textContent = label;
-  containerEl.appendChild(title);
+function estimateRMS(buf, ch){
+  const data = buf.getChannelData(ch);
+  let acc = 0;
+  for (let i = 0; i < data.length; i += 64){
+    const v = data[i];
+    acc += v*v;
+  }
+  const mean = acc / Math.max(1, Math.floor(data.length/64));
+  return Math.sqrt(mean);
+}
 
-  const btnPlay = document.createElement("button");
-  btnPlay.className = "btn";
-  btnPlay.textContent = "Play (Omnitone)";
-  containerEl.appendChild(btnPlay);
+function yawToMat3_rowMajor(yaw){
+  const c = Math.cos(yaw), s = Math.sin(yaw);
+  return [ c, 0, -s,
+           0, 1,  0,
+           s, 0,  c ];
+}
 
-  const btnRow = document.createElement("div");
-  btnRow.className = "btnrow";
 
-  const btnRew = document.createElement("button");
-  btnRew.className = "btnmini";
-  btnRew.textContent = "Rewind";
-
-  const btnStop = document.createElement("button");
-  btnStop.className = "btnmini";
-  btnStop.textContent = "Stop";
-
-  const btnBeep = document.createElement("button");
-  btnBeep.className = "btnmini";
-  btnBeep.textContent = "Beep";
-
-  const btnDry = document.createElement("button");
-  btnDry.className = "btnmini";
-  btnDry.textContent = "Dry W";
-
-  btnRow.appendChild(btnRew);
-  btnRow.appendChild(btnStop);
-  btnRow.appendChild(btnBeep);
-  btnRow.appendChild(btnDry);
-  containerEl.appendChild(btnRow);
-
-  const tiny = document.createElement("div");
-  tiny.className = "tiny";
-  tiny.textContent = "Loading status: not loaded";
-  containerEl.appendChild(tiny);
-
+/** ===== Player factory (FOA -> Omnitone) ===== */
+\
+/**
+ * ============================================================
+ * AUDIO CONTROLLER (NO UI)
+ * ============================================================
+ * We intentionally REMOVE the per-column button panel below each video.
+ * Reviewer interaction happens ONLY via the two overlay buttons on the video:
+ *   - Play/Pause
+ *   - Rewind
+ *
+ * This controller still provides:
+ *   ctrl.playFrom(t), ctrl.pause(), ctrl.stop(), ctrl.isPlaying()
+ * and applies head-rotation yaw to Omnitone in real time.
+ */
+async function createFOAController(audioUrl, getCameraYawRad){
   // Omnitone renderer
   const r = Omnitone.createFOARenderer(audioCtx);
   await r.initialize();
 
-  // output gain (make it obvious)
+  // Output gain (adjust if too loud/quiet)
   const gainOut = audioCtx.createGain();
-  gainOut.gain.value = 3.0;          // stronger boost for debug
+  gainOut.gain.value = 3.0;
   r.output.connect(gainOut);
   gainOut.connect(audioCtx.destination);
 
+  // Apply camera yaw -> Omnitone rotation
   function applyYaw(yawRad){
     const m3 = yawToMat3_rowMajor(ROT_SIGN * yawRad);
     if (typeof r.setRotationMatrix3 === "function") r.setRotationMatrix3(m3);
@@ -226,35 +282,29 @@ async function createFOAPlayer(containerEl, label, audioUrl, getCameraYawRad){
 
   let buffer = null;
   let srcNode = null;
-  let dryNode = null;
   let isPlaying = false;
   let startedAt = 0;
   let offset = 0;
 
   async function ensureLoaded(){
-    if (!buffer) {
-      buffer = await decodeBuffer(audioUrl);
-      const rms0 = estimateRMS(buffer, 0);
-      tiny.textContent =
-        `loaded ${buffer.numberOfChannels}ch · ${buffer.sampleRate} Hz · ${buffer.duration.toFixed(2)} s · rms(W)=${rms0.toExponential(2)}`;
-    }
+    if (!buffer) buffer = await decodeBuffer(audioUrl);
   }
 
   function stopAll(){
     if (srcNode) { try { srcNode.stop(); } catch(e){} srcNode = null; }
-    if (dryNode) { try { dryNode.stop(); } catch(e){} dryNode = null; }
     isPlaying = false;
     offset = 0;
-    btnPlay.textContent = "Play (Omnitone)";
   }
 
   function startOmnitone(sec){
     if (!buffer) return;
+
+    // Stop previous
     if (srcNode) { try { srcNode.stop(); } catch(e){} }
+
+    // 4ch BufferSource -> Omnitone input (single input; multichannel stream)
     srcNode = audioCtx.createBufferSource();
     srcNode.buffer = buffer;
-
-    // Explicit channel wiring: Buffer(4ch) -> splitter -> Omnitone input
     srcNode.connect(r.input);
 
     offset = Math.max(0, Math.min(sec, buffer.duration - 0.001));
@@ -262,13 +312,11 @@ async function createFOAPlayer(containerEl, label, audioUrl, getCameraYawRad){
     srcNode.start(0, offset);
 
     isPlaying = true;
-    btnPlay.textContent = "Pause (Omnitone)";
 
     srcNode.onended = () => {
       if (isPlaying) {
         isPlaying = false;
         offset = 0;
-        btnPlay.textContent = "Play (Omnitone)";
       }
     };
   }
@@ -279,69 +327,9 @@ async function createFOAPlayer(containerEl, label, audioUrl, getCameraYawRad){
     offset = offset + played;
     if (srcNode) { try { srcNode.stop(); } catch(e){} }
     isPlaying = false;
-    btnPlay.textContent = "Play (Omnitone)";
     return offset;
   }
 
-  // ----- Buttons -----
-  btnPlay.addEventListener("click", async () => {
-    try{
-      await resumeAudio();
-      await ensureLoaded();
-      if (!isPlaying) startOmnitone(offset);
-      else pauseOmnitone();
-    } catch(e){ showErr(e); }
-  });
-
-  btnRew.addEventListener("click", async () => {
-    try{
-      await resumeAudio();
-      await ensureLoaded();
-      startOmnitone(0);
-    } catch(e){ showErr(e); }
-  });
-
-  btnStop.addEventListener("click", () => stopAll());
-
-  // Beep: if this is silent -> browser output issue (not your wav / not Omnitone)
-  btnBeep.addEventListener("click", async () => {
-    try{
-      await resumeAudio();
-      const osc = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      g.gain.value = 0.12;
-      osc.frequency.value = 440;
-      osc.connect(g); g.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.35);
-    } catch(e){ showErr(e); }
-  });
-
-  // Dry W: bypass Omnitone, play channel-0 directly
-  btnDry.addEventListener("click", async () => {
-    try{
-      await resumeAudio();
-      await ensureLoaded();
-
-      if (dryNode) { try { dryNode.stop(); } catch(e){} dryNode = null; }
-
-      const src = audioCtx.createBufferSource();
-      src.buffer = buffer;
-
-      const splitter = audioCtx.createChannelSplitter(buffer.numberOfChannels);
-      const g = audioCtx.createGain();
-      g.gain.value = 0.8;
-
-      src.connect(splitter);
-      splitter.connect(g, 0); // W channel only
-      g.connect(audioCtx.destination);
-
-      src.start(0, 0);
-      dryNode = src;
-    } catch(e){ showErr(e); }
-  });
-
-  // ---- Controller returned to caller (for overlay sync) ----
   return {
     label,
     ensureLoaded,
@@ -350,13 +338,6 @@ async function createFOAPlayer(containerEl, label, audioUrl, getCameraYawRad){
     playFrom: async (sec) => { await resumeAudio(); await ensureLoaded(); startOmnitone(sec); },
     pause: () => pauseOmnitone(),
     stop: () => stopAll(),
-    rewind: async () => { await resumeAudio(); await ensureLoaded(); startOmnitone(0); },
-    toggle: async (secIfPlay) => {
-      await resumeAudio();
-      await ensureLoaded();
-      if (!isPlaying) startOmnitone(secIfPlay ?? offset);
-      else pauseOmnitone();
-    }
   };
 }
 
@@ -364,138 +345,117 @@ function buildRow(sample, idx){
   const tbody = document.getElementById("samples-body");
   const tr = document.createElement("tr");
 
-  // Video cell
-  const tdV = document.createElement("td");
-  const title = document.createElement("div");
-  title.className = "rowtitle";
-  title.textContent = sample.name || ("Sample " + (idx+1));
-  tdV.appendChild(title);
+  sample.cols.forEach((col, j) => {
+    const td = document.createElement("td");
 
-  const viewer = document.createElement("div");
-  viewer.className = "viewer";
-  tdV.appendChild(viewer);
+    // Title line
+    const title = document.createElement("div");
+    title.className = "cellTitle";
+    title.textContent = `${sample.name} · ${col.title}`;
+    td.appendChild(title);
 
-  viewer.innerHTML = `
-    <a-scene embedded vr-mode-ui="enabled:true" style="height:280px; width:100%;">
-      <a-assets>
-        <video data-role="vid" src="${sample.video}" crossorigin="anonymous"
-               playsinline webkit-playsinline preload="auto"></video>
-      </a-assets>
-      <a-videosphere data-role="sphere" rotation="0 -90 0"></a-videosphere>
-      <a-camera look-controls="enabled:true"></a-camera>
-    </a-scene>
+    // Viewer
+    const viewer = document.createElement("div");
+    viewer.className = "viewer";
+    td.appendChild(viewer);
 
-    <div class="overlay-controls">
-      <div class="ovbtn" data-role="rew">Rewind</div>
-      <div class="ovbtn" data-role="pp">Play</div>
-    </div>
-  `;
+    const vidDomId = `viddom-${idx}-${j}`;
 
-  tr.appendChild(tdV);
+    viewer.innerHTML = `
+      <a-scene embedded vr-mode-ui="enabled:true">
+        <a-assets>
+          <video id="${vidDomId}" crossorigin="anonymous" playsinline webkit-playsinline preload="auto">
+            <source src="${col.video}" type="video/webm">
+          </video>
+        </a-assets>
 
-  // Audio cells
-  const tdB1 = document.createElement("td");
-  const tdB2 = document.createElement("td");
-  const tdO  = document.createElement("td");
-  tr.appendChild(tdB1);
-  tr.appendChild(tdB2);
-  tr.appendChild(tdO);
+        <a-videosphere src="#${vidDomId}" rotation="0 -90 0"></a-videosphere>
+        <a-camera look-controls="enabled:true"></a-camera>
+      </a-scene>
 
-  tbody.appendChild(tr);
+      <div class="overlay-controls">
+        <div class="ovbtn" data-role="rew">Rewind</div>
+        <div class="ovbtn" data-role="pp">Play</div>
+      </div>
+    `;
 
-  const v = viewer.querySelector('[data-role="vid"]');
-  const btnPP = viewer.querySelector('[data-role="pp"]');
-  const btnRew = viewer.querySelector('[data-role="rew"]');
+    const v = viewer.querySelector("video");
+    const btnPP = viewer.querySelector('[data-role="pp"]');
+    const btnRew = viewer.querySelector('[data-role="rew"]');
+    const sceneEl = viewer.querySelector("a-scene");
 
-  const vidDomId = `viddom-${idx}`;
-  v.id = vidDomId;
-  viewer.querySelector('[data-role="sphere"]').setAttribute("src", `#${vidDomId}`);
+    // camera yaw
+    let camEl = null;
+    function getCameraYawRad(){ return camEl ? camEl.object3D.rotation.y : 0; }
+    sceneEl.addEventListener("loaded", () => {
+      camEl = (sceneEl.camera && sceneEl.camera.el) ? sceneEl.camera.el : sceneEl.querySelector("a-camera");
+    });
 
-  // Camera yaw
-  let camEl = null;
-  const sceneEl = viewer.querySelector("a-scene");
-  function getCameraYawRad(){ return camEl ? camEl.object3D.rotation.y : 0; }
-  sceneEl.addEventListener("loaded", () => {
-    camEl = (sceneEl.camera && sceneEl.camera.el) ? sceneEl.camera.el : sceneEl.querySelector("a-camera");
-  });
+    async function playVideo(){
+      // mute to avoid mixing the video's own audio track (if any)
+      v.muted = true;
+      v.loop = false;
+      await v.play();
+    }
 
-  async function playVideo(){
-    v.muted = true;
-    v.loop = false;
-    await v.play();
-  }
+    // Create audio controller for this column (no UI panel)
+    const ctrlReady = (async () => {
+      try{ return await createFOAController(, col.title, col.audio, getCameraYawRad); }
+      catch(e){ showErr(e); throw e; }
+    })();
 
-  // ---- Overlay controls (SYNC: Ours audio drives video) ----
-  btnPP.addEventListener("click", async () => {
-    try {
-      const ctrl = await oursReady; // wait until Ours audio UI is ready
-      await resumeAudio();
+    // Overlay drives THIS column's audio + video
+    btnPP.addEventListener("click", async () => {
+      try{
+        const ctrl = await ctrlReady;
+        await resumeAudio();
 
-      if (v.paused) {
-        // Start BOTH from current video time (so Play after scrub stays aligned)
-        const t = Math.max(0, v.currentTime || 0);
-        await ctrl.playFrom(t);
+        if (v.paused){
+          const t = Math.max(0, v.currentTime || 0);
+          await ctrl.playFrom(t);
+          await playVideo();
+          btnPP.textContent = "Pause";
+        }else{
+          const t = ctrl.pause();
+          v.pause();
+          if (typeof t === "number" && isFinite(t)) v.currentTime = t;
+          btnPP.textContent = "Play";
+        }
+      }catch(e){ showErr(e); }
+    });
+
+    btnRew.addEventListener("click", async () => {
+      try{
+        const ctrl = await ctrlReady;
+        await resumeAudio();
+        v.currentTime = 0;
+        await ctrl.playFrom(0);
         await playVideo();
         btnPP.textContent = "Pause";
-      } else {
-        // Pause audio first, then snap video to audio offset (keeps tighter sync)
-        const t = ctrl.pause();
-        v.pause();
-        if (typeof t === "number" && isFinite(t)) v.currentTime = t;
-        btnPP.textContent = "Play";
-      }
-    } catch(e) { showErr(e); }
+      }catch(e){ showErr(e); }
+    });
+
+    v.addEventListener("ended", async () => {
+      btnPP.textContent = "Play";
+      try{ const ctrl = await ctrlReady; ctrl.pause(); }catch(e){}
+    });
+
+    tr.appendChild(td);
   });
 
-  btnRew.addEventListener("click", async () => {
-    try {
-      const ctrl = await oursReady;
-      await resumeAudio();
-      v.currentTime = 0;
-      await ctrl.playFrom(0);
-      await playVideo();
-      btnPP.textContent = "Pause";
-    } catch(e) { showErr(e); }
-  });
-
-  // If video ends (or user pauses it via built-in UI), also pause Ours audio
-  v.addEventListener("ended", async () => {
-    btnPP.textContent = "Play";
-    try { const ctrl = await oursReady; ctrl.pause(); } catch(e){}
-  });
-  v.addEventListener("pause", async () => {
-    // ignore the pause event we cause ourselves after finishing
-    try {
-      const ctrl = await oursReady;
-      if (ctrl.isPlaying && ctrl.isPlaying()) {
-        const t = ctrl.pause();
-        if (typeof t === "number" && isFinite(t) && !v.ended) v.currentTime = t;
-        btnPP.textContent = "Play";
-      }
-    } catch(e){}
-  });
-
-  // Create audio players
-  // NOTE: we keep per-column buttons, but overlay controls will drive *Ours* for the reviewer experience.
-  let oursCtrl = null;
-  const oursReady = (async () => {
-    try {
-      await createFOAPlayer(tdB1, "Baseline",   sample.b1, getCameraYawRad);
-      await createFOAPlayer(tdB2, "Baseline 2", sample.b2, getCameraYawRad);
-      oursCtrl = await createFOAPlayer(tdO,  "Ours",       sample.ours, getCameraYawRad);
-      return oursCtrl;
-    } catch(e) { showErr(e); throw e; }
-  })();
+  tbody.appendChild(tr);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  try {
+  try{
+    if (!SAMPLES.length) return;
+
+    // take titles from the first sample's columns
+    renderHeader(SAMPLES[0].cols.map(c => c.title));
+
     SAMPLES.forEach((s, i) => buildRow(s, i));
-  } catch(e) { showErr(e); }
+  }catch(e){ showErr(e); }
 });
-
-document.addEventListener("pointerdown", () => { resumeAudio().catch(()=>{}); }, { once:false });
 </script>
-
 </body>
 </html>
