@@ -255,12 +255,7 @@ async function createFOAPlayer(containerEl, label, audioUrl, getCameraYawRad){
     srcNode.buffer = buffer;
 
     // Explicit channel wiring: Buffer(4ch) -> splitter -> Omnitone input
-    const splitter = audioCtx.createChannelSplitter(4);
-    srcNode.connect(splitter);
-    splitter.connect(r.input, 0, 0);
-    splitter.connect(r.input, 1, 1);
-    splitter.connect(r.input, 2, 2);
-    splitter.connect(r.input, 3, 3);
+    srcNode.connect(r.input);
 
     offset = Math.max(0, Math.min(sec, buffer.duration - 0.001));
     startedAt = audioCtx.currentTime;
