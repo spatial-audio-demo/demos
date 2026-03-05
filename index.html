@@ -88,6 +88,31 @@
       font-size: 13px;
       white-space: pre-wrap;
     }
+    /* ===== FIX overlay click (A-Frame canvas may sit above buttons) ===== */
+    .viewer { position: relative; }
+    
+    /* A-Frame scene/canvas layer: keep it below overlay */
+    .viewer a-scene {
+      position: relative !important;
+      z-index: 1 !important;
+    }
+    
+    .viewer canvas.a-canvas {
+      position: relative !important;
+      z-index: 1 !important;
+    }
+    
+    /* Overlay layer: always on top + clickable */
+    .viewer .overlay-controls{
+      position: absolute !important;
+      z-index: 99999 !important;
+      pointer-events: auto !important;
+    }
+    
+    .viewer .ovbtn{
+      pointer-events: auto !important;
+      touch-action: manipulation; /* helps on trackpad/touch */
+    }
   </style>
 </head>
 
@@ -375,6 +400,22 @@ function buildSampleRow(sample, sampleIdx){
     function getCameraYawRad(){ return camEl ? camEl.object3D.rotation.y : 0; }
     sceneEl.addEventListener("loaded", () => {
       camEl = (sceneEl.camera && sceneEl.camera.el) ? sceneEl.camera.el : sceneEl.querySelector("a-camera");
+    });
+    // Force A-Frame canvas to stay BELOW overlay buttons (created after scene starts rendering)
+    sceneEl.addEventListener("renderstart", () => {
+      try{
+        const c = sceneEl.canvas;            // A-Frame canvas
+        if (c){
+          c.classList.add("a-canvas");       // ensure selector matches
+          c.style.position = "relative";
+          c.style.zIndex = "1";
+        }
+        const overlay = viewer.querySelector(".overlay-controls");
+        if (overlay){
+          overlay.style.zIndex = "99999";
+          overlay.style.pointerEvents = "auto";
+        }
+      }catch(e){}
     });
 
     async function playVideo(){
