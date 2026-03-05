@@ -12,38 +12,40 @@
   <style>
     body{font-family:Arial, sans-serif; max-width:1280px; margin:0 auto; padding:28px; background:#fff; color:#111;}
     h1{margin:0 0 12px; text-align:center; font-size:28px; line-height:1.25;}
-    .top{display:grid; grid-template-columns:1.15fr 0.85fr; gap:14px; align-items:start; margin-bottom:16px;}
-    .card{border:1px solid #e6e6e6; border-radius:14px; padding:14px; background:#fff;}
+
+    .card{border:1px solid #e6e6e6; border-radius:14px; padding:14px; background:#fff; margin-bottom:14px;}
     .card h2{margin:0 0 8px; font-size:16px;}
+    img{width:100%; border-radius:12px; border:1px solid #eee;}
+
     .note{margin:12px 0 18px; text-align:center; font-size:15px;}
     .note small{display:block; color:#666; margin-top:6px;}
-    img{width:100%; border-radius:12px; border:1px solid #eee;}
 
     table{width:100%; border-collapse:collapse; table-layout:fixed;}
     th,td{border-top:1px solid #eee; padding:10px; vertical-align:top; text-align:center;}
     th{font-size:13px; color:#333; background:#fafafa; border-top:1px solid #e6e6e6;}
-    .col-video{width:46%;}
-    .col-audio{width:18%;}
+
+    .col-video{width:42%;}   /* smaller so 3 audio cols fit better */
+    .col-audio{width:19.33%;}
 
     .viewer{
       position:relative;
       border:1px solid #eee;
       border-radius:14px;
       overflow:hidden;
-      height:320px;
+      height:280px;          /* smaller than before */
       background:#000;
     }
-    a-scene{height:320px; width:100%;}
+    a-scene{height:280px; width:100%;}
 
     .rowtitle{font-weight:700; margin-bottom:8px; text-align:left; font-size:13px; color:#222;}
 
     .overlay-controls{
       position:absolute;
       left:50%;
-      bottom:18px;
+      bottom:16px;
       transform:translateX(-50%);
       display:flex;
-      gap:14px;
+      gap:12px;
       z-index:10;
       pointer-events:auto;
     }
@@ -51,7 +53,7 @@
       border:2px solid rgba(255,255,255,0.85);
       background:rgba(0,0,0,0.25);
       color:#fff;
-      padding:10px 16px;
+      padding:9px 14px;
       border-radius:10px;
       cursor:pointer;
       font-size:14px;
@@ -82,18 +84,19 @@
 <body>
   <h1>Visually-Guided Spatial Audio Demo</h1>
 
-  <div class="top">
-    <div class="card">
-      <h2>Abstract</h2>
-      <div style="line-height:1.55; font-size:13px; color:#222;">
-        Paste your abstract here (short version is fine for review).
-      </div>
+  <!-- Abstract (top) -->
+  <div class="card">
+    <h2>Abstract</h2>
+    <div style="line-height:1.55; font-size:13px; color:#222;">
+      Paste your abstract here (short version is fine for review).
     </div>
-    <div class="card">
-      <h2>Framework</h2>
-      <img src="framework.png" alt="framework"/>
-      <div class="tiny">Figure: Overview of the proposed framework.</div>
-    </div>
+  </div>
+
+  <!-- Framework (below abstract) -->
+  <div class="card">
+    <h2>Framework</h2>
+    <img src="framework.png" alt="framework"/>
+    <div class="tiny">Figure: Overview of the proposed framework.</div>
   </div>
 
   <div class="note">
@@ -123,7 +126,7 @@
 
 <script>
 /** ===== EDIT ONLY THIS SECTION ===== */
-const VER = "v2";      // bump when debugging
+const VER = "v3";      // bump when debugging
 const ROT_SIGN = -1;   // flip to +1 if direction reversed
 
 const SAMPLES = [
@@ -150,8 +153,8 @@ function yawToMat3_rowMajor(yawRad){
   return [ c,0,-s,  0,1,0,  s,0,c ];
 }
 
-async function createAudioUnit(containerEl, label, audioSrc, getCameraYawRad){
-  containerEl.innerHTML = ""; // clear
+async function createFOABufferPlayer(containerEl, label, audioUrl, getCameraYawRad){
+  containerEl.innerHTML = "";
 
   const title = document.createElement("div");
   title.className = "rowtitle";
@@ -180,18 +183,9 @@ async function createAudioUnit(containerEl, label, audioSrc, getCameraYawRad){
   tiny.textContent = "FOA → binaural (Omnitone)";
   containerEl.appendChild(tiny);
 
-  const audio = document.createElement("audio");
-  audio.crossOrigin = "anonymous";
-  audio.preload = "auto";
-  audio.src = audioSrc;
-  containerEl.appendChild(audio);
-
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const r = Omnitone.createFOARenderer(ctx);
   await r.initialize();
-
-  const srcNode = ctx.createMediaElementSource(audio);
-  srcNode.connect(r.input);
   r.output.connect(ctx.destination);
 
   function applyYaw(yawRad){
@@ -201,32 +195,94 @@ async function createAudioUnit(containerEl, label, audioSrc, getCameraYawRad){
     else if (r._foaRotator && typeof r._foaRotator.setRotationMatrix3 === "function") r._foaRotator.setRotationMatrix3(m3);
   }
 
-  // continuous rotation update
+  // decode FOA buffer (multi-channel safe)
+  async function loadBuffer(url){
+    const resp = await fetch(url, { mode: "cors" });
+    if (!resp.ok) throw new Error(`fetch failed ${resp.status} for ${url}`);
+    const arr = await resp.arrayBuffer();
+    return await ctx.decodeAudioData(arr);
+  }
+
+  let buffer = null;
+  let srcNode = null;
+  let isPlaying = false;
+  let startedAt = 0;     // ctx.currentTime when started
+  let offset = 0;        // seconds into buffer
+
+  async function ensureLoaded(){
+    if (!buffer) buffer = await loadBuffer(audioUrl);
+  }
+
+  function startFrom(sec){
+    if (!buffer) return;
+    if (srcNode) { try { srcNode.stop(); } catch(e){} }
+    srcNode = ctx.createBufferSource();
+    srcNode.buffer = buffer;
+    srcNode.connect(r.input);
+    startedAt = ctx.currentTime;
+    offset = Math.max(0, Math.min(sec, buffer.duration - 0.001));
+    srcNode.start(0, offset);
+    isPlaying = true;
+    btnPlay.textContent = "Pause";
+    srcNode.onended = () => {
+      // If naturally ended
+      if (isPlaying) {
+        isPlaying = false;
+        offset = 0;
+        btnPlay.textContent = "Play";
+      }
+    };
+  }
+
+  function pause(){
+    if (!isPlaying) return;
+    const played = ctx.currentTime - startedAt;
+    offset = offset + played;
+    if (srcNode) { try { srcNode.stop(); } catch(e){} }
+    isPlaying = false;
+    btnPlay.textContent = "Play";
+  }
+
+  function stop(){
+    if (srcNode) { try { srcNode.stop(); } catch(e){} }
+    isPlaying = false;
+    offset = 0;
+    btnPlay.textContent = "Play";
+  }
+
+  function rewind(){
+    offset = 0;
+    if (isPlaying) startFrom(0);
+  }
+
+  // rotation update loop
   (function tick(){
     applyYaw(getCameraYawRad());
     requestAnimationFrame(tick);
   })();
 
   btnPlay.addEventListener("click", async () => {
-    if (ctx.state !== "running") await ctx.resume();
     try {
-      if (audio.paused) { await audio.play(); btnPlay.textContent="Pause"; }
-      else { audio.pause(); btnPlay.textContent="Play"; }
-    } catch(e) { showErr("Audio failed: " + (e.name||"") + " " + (e.message||e)); }
+      if (ctx.state !== "running") await ctx.resume();
+      await ensureLoaded();
+      if (!isPlaying) startFrom(offset);
+      else pause();
+    } catch(e) {
+      showErr("Audio failed: " + (e.name||"") + " " + (e.message||e));
+    }
   });
 
-  btnRew.addEventListener("click", () => {
-    audio.currentTime = 0;
-    audio.play().catch(()=>{});
-    btnPlay.textContent = "Pause";
+  btnRew.addEventListener("click", async () => {
+    try {
+      if (ctx.state !== "running") await ctx.resume();
+      await ensureLoaded();
+      startFrom(0);
+    } catch(e) {
+      showErr("Rewind failed: " + (e.name||"") + " " + (e.message||e));
+    }
   });
 
-  btnStop.addEventListener("click", () => {
-    audio.pause(); audio.currentTime = 0;
-    btnPlay.textContent = "Play";
-  });
-
-  audio.addEventListener("ended", () => btnPlay.textContent="Play");
+  btnStop.addEventListener("click", () => stop());
 }
 
 function buildRow(sample, idx){
@@ -235,7 +291,7 @@ function buildRow(sample, idx){
 
   const tr = document.createElement("tr");
 
-  // --- Video cell ---
+  // Video cell
   const tdV = document.createElement("td");
   const title = document.createElement("div");
   title.className = "rowtitle";
@@ -246,9 +302,8 @@ function buildRow(sample, idx){
   viewer.className = "viewer";
   tdV.appendChild(viewer);
 
-  // Use data-role instead of global ids (fixes your null.addEventListener)
   viewer.innerHTML = `
-    <a-scene embedded vr-mode-ui="enabled:true" style="height:320px; width:100%;">
+    <a-scene embedded vr-mode-ui="enabled:true" style="height:280px; width:100%;">
       <a-assets>
         <video data-role="vid" src="${sample.video}" crossorigin="anonymous"
                playsinline webkit-playsinline preload="auto"></video>
@@ -265,7 +320,7 @@ function buildRow(sample, idx){
 
   tr.appendChild(tdV);
 
-  // --- Audio cells ---
+  // Audio cells
   const tdB1 = document.createElement("td");
   const tdB2 = document.createElement("td");
   const tdO  = document.createElement("td");
@@ -275,20 +330,19 @@ function buildRow(sample, idx){
 
   tbody.appendChild(tr);
 
-  // Grab elements *within this viewer* (no null from global IDs)
   const v = viewer.querySelector('[data-role="vid"]');
   const btnPP = viewer.querySelector('[data-role="pp"]');
   const btnRew = viewer.querySelector('[data-role="rew"]');
 
-  if (!v || !btnPP || !btnRew) throw new Error("Video overlay controls not found in viewer.");
+  if (!v || !btnPP || !btnRew) throw new Error("Video overlay controls not found.");
 
-  // A-Frame expects videosphere src="#id", so give the video an id and link it
+  // Link videosphere to the video element
   const vidDomId = `viddom-${idx}`;
   v.id = vidDomId;
   const sphere = viewer.querySelector('[data-role="sphere"]');
   sphere.setAttribute("src", `#${vidDomId}`);
 
-  // Resolve camera yaw via scene camera
+  // Camera yaw
   let camEl = null;
   const sceneEl = viewer.querySelector("a-scene");
 
@@ -324,12 +378,12 @@ function buildRow(sample, idx){
 
   v.addEventListener("ended", () => btnPP.textContent="Play");
 
-  // Create audios
+  // Create audio players (buffer-based, not <audio>)
   (async () => {
     try {
-      await createAudioUnit(tdB1, "Baseline",   sample.b1, getCameraYawRad);
-      await createAudioUnit(tdB2, "Baseline 2", sample.b2, getCameraYawRad);
-      await createAudioUnit(tdO,  "Ours",       sample.ours, getCameraYawRad);
+      await createFOABufferPlayer(tdB1, "Baseline",   sample.b1, getCameraYawRad);
+      await createFOABufferPlayer(tdB2, "Baseline 2", sample.b2, getCameraYawRad);
+      await createFOABufferPlayer(tdO,  "Ours",       sample.ours, getCameraYawRad);
     } catch(e) { showErr(e); }
   })();
 }
