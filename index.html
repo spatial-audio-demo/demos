@@ -229,7 +229,13 @@ async function createFOAPlayer(containerEl, label, audioUrl, getCameraYawRad){
     if (srcNode) { try { srcNode.stop(); } catch(e){} }
     srcNode = audioCtx.createBufferSource();
     srcNode.buffer = buffer;
-    srcNode.connect(r.input);
+    const splitter = audioCtx.createChannelSplitter(4);
+    srcNode.connect(splitter);
+
+    splitter.connect(r.input,0,0);
+    splitter.connect(r.input,1,1);
+    splitter.connect(r.input,2,2);
+    splitter.connect(r.input,3,3);
 
     offset = Math.max(0, Math.min(sec, buffer.duration - 0.001));
     startedAt = audioCtx.currentTime;
