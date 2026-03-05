@@ -13,6 +13,13 @@
 
   <style>
     :root{
+      /* =======================
+         LAYOUT KNOBS (EDIT HERE)
+         =======================
+         --page-max : overall page width. Larger = easier to fit 4 videos in one row.
+         --viewer-h : each 360 video height. Smaller = easier to fit 4 videos.
+      */
+
       /* ====== TUNE THESE TWO TO FIT 4 VIDEOS IN ONE ROW ====== */
       --page-max: 1800px;   /* make larger if your screen is wide */
       --viewer-h: 230px;    /* video height for each column */
@@ -91,30 +98,6 @@
     }
     .ovbtn:active{transform: translateY(1px);}
 
-    .btn{
-      width:100%;
-      border: 1px solid #ddd;
-      border-radius: 14px;
-      padding: 12px 14px;
-      font-weight: 700;
-      background:#fff;
-      cursor:pointer;
-    }
-    .btnrow{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    .btnmini{
-      border: 1px solid #ddd;
-      border-radius: 14px;
-      padding: 10px 12px;
-      font-weight: 700;
-      background:#fff;
-      cursor:pointer;
-    }
-
     .footer{
       margin-top: 10px;
       color: #555;
@@ -176,12 +159,6 @@ const ROT_SIGN = -1;
 
 // Each sample has multiple columns. Each column has its own (video + FOA audio).
 // Put the SAME video in each column if you want, and different audio for each model.
-/* ============================================================
-   EDIT SAMPLES HERE
-   - Add/remove columns by editing `cols: [...]`
-   - Each column has its own 360 video + its own FOA wav
-   - You can reuse the same video for all columns (recommended)
-   ============================================================ */
 const SAMPLES = [
   {
     name: "Sample 1",
@@ -245,33 +222,27 @@ function yawToMat3_rowMajor(yaw){
 }
 
 
-/** ===== Player factory (FOA -> Omnitone) ===== */
 \
-/**
- * ============================================================
- * AUDIO CONTROLLER (NO UI)
- * ============================================================
- * We intentionally REMOVE the per-column button panel below each video.
- * Reviewer interaction happens ONLY via the two overlay buttons on the video:
- *   - Play/Pause
- *   - Rewind
+/** ===== Player factory (FOA -> Omnitone) =====
+ * OVERLAY-ONLY VERSION:
+ *  - We REMOVE the big button panel under each video.
+ *  - Each column is controlled ONLY by the two overlay buttons on the video:
+ *      Play/Pause + Rewind
  *
- * This controller still provides:
- *   ctrl.playFrom(t), ctrl.pause(), ctrl.stop(), ctrl.isPlaying()
- * and applies head-rotation yaw to Omnitone in real time.
+ * How to tune loudness:
+ *  - change gainOut.gain.value below (e.g., 2.0 ~ 4.0)
  */
-async function createFOAController(audioUrl, getCameraYawRad){
-  // Omnitone renderer
+async function createFOAController(label, audioUrl, getCameraYawRad){
+  await resumeAudio();
+
   const r = Omnitone.createFOARenderer(audioCtx);
   await r.initialize();
 
-  // Output gain (adjust if too loud/quiet)
   const gainOut = audioCtx.createGain();
-  gainOut.gain.value = 3.0;
+  gainOut.gain.value = 2.8;
   r.output.connect(gainOut);
   gainOut.connect(audioCtx.destination);
 
-  // Apply camera yaw -> Omnitone rotation
   function applyYaw(yawRad){
     const m3 = yawToMat3_rowMajor(ROT_SIGN * yawRad);
     if (typeof r.setRotationMatrix3 === "function") r.setRotationMatrix3(m3);
@@ -287,7 +258,9 @@ async function createFOAController(audioUrl, getCameraYawRad){
   let offset = 0;
 
   async function ensureLoaded(){
-    if (!buffer) buffer = await decodeBuffer(audioUrl);
+    if (!buffer){
+      buffer = await decodeBuffer(audioUrl);
+    }
   }
 
   function stopAll(){
@@ -298,13 +271,12 @@ async function createFOAController(audioUrl, getCameraYawRad){
 
   function startOmnitone(sec){
     if (!buffer) return;
-
-    // Stop previous
     if (srcNode) { try { srcNode.stop(); } catch(e){} }
 
-    // 4ch BufferSource -> Omnitone input (single input; multichannel stream)
     srcNode = audioCtx.createBufferSource();
     srcNode.buffer = buffer;
+
+    // IMPORTANT: Omnitone input has a single input; we send the multichannel stream directly.
     srcNode.connect(r.input);
 
     offset = Math.max(0, Math.min(sec, buffer.duration - 0.001));
@@ -314,7 +286,7 @@ async function createFOAController(audioUrl, getCameraYawRad){
     isPlaying = true;
 
     srcNode.onended = () => {
-      if (isPlaying) {
+      if (isPlaying){
         isPlaying = false;
         offset = 0;
       }
@@ -334,11 +306,29 @@ async function createFOAController(audioUrl, getCameraYawRad){
     label,
     ensureLoaded,
     isPlaying: () => isPlaying,
-    getOffset: () => offset,
     playFrom: async (sec) => { await resumeAudio(); await ensureLoaded(); startOmnitone(sec); },
     pause: () => pauseOmnitone(),
     stop: () => stopAll(),
+    rewind: async () => { await resumeAudio(); await ensureLoaded(); startOmnitone(0); },
+    getOffset: () => offset,
   };
+}
+/** ===== Build dynamic table ===== */
+function renderHeader(colTitles){
+  const colgroup = document.getElementById("colgroup");
+  const thead = document.getElementById("thead-row");
+  colgroup.innerHTML = "";
+  thead.innerHTML = "";
+  colTitles.forEach(() => {
+    const c = document.createElement("col");
+    c.className = "col";
+    colgroup.appendChild(c);
+  });
+  colTitles.forEach(t => {
+    const th = document.createElement("th");
+    th.textContent = t;
+    thead.appendChild(th);
+  });
 }
 
 function buildRow(sample, idx){
@@ -398,9 +388,9 @@ function buildRow(sample, idx){
       await v.play();
     }
 
-    // Create audio controller for this column (no UI panel)
+    // Audio controller (NO UI)
     const ctrlReady = (async () => {
-      try{ return await createFOAController(, col.title, col.audio, getCameraYawRad); }
+      try{ return await createFOAController(col.title, col.audio, getCameraYawRad); }
       catch(e){ showErr(e); throw e; }
     })();
 
