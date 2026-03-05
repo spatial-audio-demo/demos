@@ -1,139 +1,85 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>spatial-audio-demo</title>
+  <title>Visually-Guided Spatial Audio Generation for 360° In-the-Wild Speech Scenes</title>
 
-  <!-- A-Frame (360 video) -->
+  <!-- ========= Styling (ViSAGe-like Bulma template) ========= -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans:400,600,700|Noto+Sans:400,600,700|Castoro:400,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+
+  <!-- ========= 360° video + FOA spatial audio ========= -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-
-  <!-- Omnitone (FOA -> binaural) -->
   <script src="https://cdn.jsdelivr.net/npm/omnitone@0.3.2/build/omnitone.min.js"></script>
 
   <style>
+    /* ============================================================
+       EDIT KNOBS HERE (you only need to touch these 4 values)
+       ============================================================ */
     :root{
-      /* =======================
-         LAYOUT KNOBS (EDIT HERE)
-         =======================
-         --page-max : overall page width. Larger = easier to fit 4 videos in one row.
-         --viewer-h : each 360 video height. Smaller = easier to fit 4 videos.
-      */
-
-      /* ====== TUNE THESE TWO TO FIT 4 VIDEOS IN ONE ROW ====== */
-      --page-max: 1800px;   /* make larger if your screen is wide */
-      --viewer-h: 230px;    /* video height for each column */
-      /* ======================================================= */
-
-      --radius: 14px;
-      --border: #ececec;
-      --muted: #666;
+      --maxw: 1180px;         /* page width, ViSAGe-like */
+      --viewerH: 260px;       /* height of each 360 viewer */
+      --radius: 14px;         /* rounded corners */
+      --btnPadY: 8px;         /* overlay button padding */
     }
 
     body{
-      font-family: Arial, sans-serif;
-      max-width: var(--page-max);
-      margin: 0 auto;
-      padding: 22px;
-      background: #fff;
-      color: #111;
+      font-family: "Google Sans","Noto Sans",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
 
-    h1{margin:0 0 10px 0; font-size: 26px;}
-    .hint{margin: 4px 0 16px 0; color: #222; text-align:center; font-weight:600;}
-    .tiny{margin-top:8px; color: var(--muted); font-size: 12px; line-height: 1.35;}
-
-    .card{
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 18px;
-      margin: 14px 0;
-      background:#fff;
+    .container.is-max-desktop{
+      max-width: var(--maxw) !important;
     }
 
-    table{width:100%; border-collapse: collapse; table-layout: fixed;}
-    th, td{border-top: 1px solid #f0f0f0; padding: 12px; vertical-align: top;}
-    thead th{border-top: none; padding-top: 6px; padding-bottom: 14px; font-size: 15px;}
-    th{color:#111; font-weight:700; text-align:center;}
-    td{padding-top: 10px;}
-
-    /* 4 columns */
-    col.col{width:25%;}
-
-    .cellTitle{
-      font-weight: 800;
-      margin: 2px 0 10px 0;
-      font-size: 14px;
-      text-align: left;
-    }
-
+    /* viewer */
     .viewer{
       position: relative;
-      border: 1px solid var(--border);
+      width: 100%;
+      height: var(--viewerH);
       border-radius: var(--radius);
       overflow: hidden;
-      height: var(--viewer-h);
       background: #000;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.04);
     }
-    a-scene{height: var(--viewer-h); width:100%;}
+    .viewer a-scene{ width:100%; height:100%; }
 
+    /* Make sure overlay is clickable above the A-Frame canvas */
+    .viewer .a-canvas{ position: relative !important; z-index: 1 !important; }
     .overlay-controls{
-      position:absolute;
+      position: absolute;
       left: 12px;
       bottom: 12px;
-      display:flex;
+      display: flex;
       gap: 10px;
-      z-index: 10;
+      z-index: 9999;
+      pointer-events: auto;
     }
-      /* ===== FIX: make overlay buttons clickable above A-Frame canvas ===== */
-      .viewer { position: relative; }
-      
-      /* A-Frame renders a canvas with class "a-canvas" */
-      .viewer .a-canvas { 
-        position: relative !important;
-        z-index: 1 !important;
-      }
-      
-      .viewer .overlay-controls{
-        z-index: 9999 !important;
-        pointer-events: auto !important;
-      }
-      
-      .viewer .ovbtn{
-        pointer-events: auto !important;
-      }
     .ovbtn{
+      pointer-events: auto;
       background: rgba(0,0,0,0.55);
       color: #fff;
-      border: 2px solid rgba(255,255,255,0.7);
+      border: 2px solid rgba(255,255,255,0.75);
       border-radius: 12px;
-      padding: 10px 16px;
+      padding: var(--btnPadY) 14px;
       font-weight: 700;
       cursor: pointer;
       user-select: none;
       backdrop-filter: blur(2px);
     }
-    .ovbtn:active{transform: translateY(1px);}
+    .ovbtn:active{ transform: translateY(1px); }
 
-    .footer{
-      margin-top: 10px;
-      color: #555;
-      font-size: 14px;
-    }
+    .hintline{ margin-top: 10px; font-weight: 600; }
+    .section.hero.is-light { background: #f5f5f5; }
+    .subtitle-tight{ margin-top: .25rem !important; }
 
-    /* responsive: if screen is narrow, stack columns */
-    @media (max-width: 1100px){
-      col.col{width:auto;}
-      table, thead, tbody, tr, th, td{display:block;}
-      thead{display:none;}
-      tr{border-top:1px solid #eee;}
-      td{border-top:none;}
-      .viewer{height: 260px;}
-      a-scene{height: 260px;}
-    }
-
-    .err{
-      margin-top: 10px;
+    #errbox{
+      display:none;
+      margin-top: 12px;
       background:#ffecec;
       border:1px solid #ffb3b3;
       color:#7a0000;
@@ -146,54 +92,132 @@
 </head>
 
 <body>
-  <h1>Visually-Guided Spatial Audio Generation for 360° In-the-Wild Speech Scenes</h1>
-  <div class="hint">🎧 Please wear headphones and drag the video to experience spatial audio rotation.</div>
 
-  <div class="card">
-    <table>
-      <colgroup id="colgroup">
-        <!-- injected -->
-      </colgroup>
-      <thead>
-        <tr id="thead-row">
-          <!-- injected -->
-        </tr>
-      </thead>
-      <tbody id="samples-body">
-        <!-- injected -->
-      </tbody>
-    </table>
+  <!-- ========================= HERO ========================= -->
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">
+              Visually-Guided Spatial Audio Generation for 360° In-the-Wild Speech Scenes
+            </h1>
 
-    <div class="footer">We would like to thank Omnitone for the 360° interactive spatial audio rendering.</div>
-    <div id="errbox" class="err" style="display:none;"></div>
-  </div>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">Anonymous Authors</span>
+            </div>
+
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">Interspeech 2026 (under review)</span>
+            </div>
+
+            <div class="column has-text-centered" style="margin-top: 14px;">
+              <div class="publication-links">
+                <span class="link-block">
+                  <a href="#" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                    <span>Paper</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="#" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fab fa-github"></i></span>
+                    <span>Code</span>
+                  </a>
+                </span>
+              </div>
+            </div>
+
+            <p class="hintline">
+              🎧 Please wear headphones and drag the 360° video to experience spatial audio rotation.
+            </p>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================= ABSTRACT ========================= -->
+  <section class="section hero is-light">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Abstract</h2>
+          <div class="content has-text-justified">
+            <p>
+              Spatial audio is a key component of immersive $360^\circ$ media, yet high-quality spatial capture remains limited in real-world speech-dominant scenes. We study visually guided First-Order Ambisonics (FOA) speech spatialization in the wild: given aligned $360^\circ$ video and an omnidirectional audio track, the goal is to reconstruct coherent spatial audio that remains stable under viewpoint changes. To support this task, we introduce YT-SPEECH, a speech-oriented $360^\circ$ video-FOA dataset curated from YouTube. We propose a two-stage Localizer-Renderer framework, where an audio-visual segmentation backbone provides frame-wise spatial heatmaps and a conditional complex-domain U-Net reconstructs directional FOA signals from the omnidirectional channel. A confidence-based gating strategy stabilizes conditioning under ambiguous acoustic conditions. Experiments show improved reconstruction fidelity, spatial accuracy, and perceptual speech quality relative to ablated variants and prior approaches.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================= OVERVIEW (single image) ========================= -->
+  <section class="hero is-small">
+    <div class="hero-body">
+      <div class="container is-max-desktop has-text-centered">
+        <h2 class="title is-3">Overview</h2>
+        <figure class="image" style="max-width: 980px; margin: 0 auto;">
+          <img src="framework.png" alt="Framework overview" style="border-radius: 12px; border: 1px solid #eee;">
+        </figure>
+        <p class="subtitle subtitle-tight" style="margin-top: 10px;">
+          Overview of the proposed Localizer–Renderer framework.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================= GUIDELINES ========================= -->
+  <section class="hero is-small is-light">
+    <div class="hero-body">
+      <div class="container is-max-desktop has-text-centered">
+        <h3 class="title is-3">Guidelines for Listening Demo Videos</h3>
+        <ul class="is-size-5" style="display:inline-block; text-align:left; list-style: disc; padding-left: 1.5em;">
+          <li>Please use your headphones 🎧 for the best audio experience.</li>
+          <li>Drag the 360° video to change the view direction (yaw rotation).</li>
+          <li>Use <b>Play</b> to start/pause the spatial audio; <b>Rewind</b> to restart.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================= COMPARISON ========================= -->
+  <section class="hero is-small">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <h3 class="title is-3 has-text-centered">Comparison with Baselines (Panoramic Videos)</h3>
+
+        <div id="demo-root"></div>
+        <div id="errbox"></div>
+
+        <p class="has-text-centered" style="margin-top: 18px; color:#666;">
+          We would like to thank Omnitone for the 360° interactive spatial audio rendering.
+        </p>
+      </div>
+    </div>
+  </section>
 
 <script>
-/** =========================
- *  EDIT THIS SECTION ONLY
- *  ========================= */
+/* ============================================================
+   EDIT SAMPLES HERE ONLY
+   ============================================================ */
 const ROT_SIGN = -1;
 
-// Each sample has multiple columns. Each column has its own (video + FOA audio).
-// Put the SAME video in each column if you want, and different audio for each model.
 const SAMPLES = [
   {
     name: "Sample 1",
     cols: [
-      { title: "GT",        video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_gt.wav" },
-      { title: "Baseline",  video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_baseline.wav" },
-      { title: "Baseline 2",video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_baseline2.wav" },
-      { title: "Ours",      video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_pred.wav" },
+      { title: "GT",         video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_gt.wav" },
+      { title: "Baseline",   video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_baseline.wav" },
+      { title: "Baseline 2", video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_baseline2.wav" },
+      { title: "Ours",       video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_pred.wav" },
     ],
   },
 ];
 
-// If you later want 5 columns, just add one more item in cols[].
-// If you want fewer, delete an item.
-/** ========================= */
-
-
-/** ===== Helpers / Audio ===== */
+/* ========================= helpers ========================= */
 let audioCtx = null;
 
 function showErr(e){
@@ -220,17 +244,6 @@ async function decodeBuffer(url){
   return await audioCtx.decodeAudioData(ab);
 }
 
-function estimateRMS(buf, ch){
-  const data = buf.getChannelData(ch);
-  let acc = 0;
-  for (let i = 0; i < data.length; i += 64){
-    const v = data[i];
-    acc += v*v;
-  }
-  const mean = acc / Math.max(1, Math.floor(data.length/64));
-  return Math.sqrt(mean);
-}
-
 function yawToMat3_rowMajor(yaw){
   const c = Math.cos(yaw), s = Math.sin(yaw);
   return [ c, 0, -s,
@@ -238,16 +251,8 @@ function yawToMat3_rowMajor(yaw){
            s, 0,  c ];
 }
 
-/** ===== Player factory (FOA -> Omnitone) =====
- * OVERLAY-ONLY VERSION:
- *  - We REMOVE the big button panel under each video.
- *  - Each column is controlled ONLY by the two overlay buttons on the video:
- *      Play/Pause + Rewind
- *
- * How to tune loudness:
- *  - change gainOut.gain.value below (e.g., 2.0 ~ 4.0)
- */
-async function createFOAController(label, audioUrl, getCameraYawRad){
+/* ========================= audio controller ========================= */
+async function createFOAController(audioUrl, getCameraYawRad){
   await resumeAudio();
 
   const r = Omnitone.createFOARenderer(audioCtx);
@@ -273,31 +278,20 @@ async function createFOAController(label, audioUrl, getCameraYawRad){
   let offset = 0;
 
   async function ensureLoaded(){
-    if (!buffer){
-      buffer = await decodeBuffer(audioUrl);
-    }
+    if (!buffer) buffer = await decodeBuffer(audioUrl);
   }
 
-  function stopAll(){
-    if (srcNode) { try { srcNode.stop(); } catch(e){} srcNode = null; }
-    isPlaying = false;
-    offset = 0;
-  }
-
-  function startOmnitone(sec){
+  function start(sec){
     if (!buffer) return;
     if (srcNode) { try { srcNode.stop(); } catch(e){} }
 
     srcNode = audioCtx.createBufferSource();
     srcNode.buffer = buffer;
-
-    // IMPORTANT: Omnitone input has a single input; we send the multichannel stream directly.
-    srcNode.connect(r.input);
+    srcNode.connect(r.input); // multichannel stream
 
     offset = Math.max(0, Math.min(sec, buffer.duration - 0.001));
     startedAt = audioCtx.currentTime;
     srcNode.start(0, offset);
-
     isPlaying = true;
 
     srcNode.onended = () => {
@@ -308,7 +302,7 @@ async function createFOAController(label, audioUrl, getCameraYawRad){
     };
   }
 
-  function pauseOmnitone(){
+  function pause(){
     if (!isPlaying) return offset;
     const played = audioCtx.currentTime - startedAt;
     offset = offset + played;
@@ -318,63 +312,49 @@ async function createFOAController(label, audioUrl, getCameraYawRad){
   }
 
   return {
-    label,
     ensureLoaded,
     isPlaying: () => isPlaying,
-    playFrom: async (sec) => { await resumeAudio(); await ensureLoaded(); startOmnitone(sec); },
-    pause: () => pauseOmnitone(),
-    stop: () => stopAll(),
-    rewind: async () => { await resumeAudio(); await ensureLoaded(); startOmnitone(0); },
-    getOffset: () => offset,
+    playFrom: async (sec) => { await ensureLoaded(); start(sec); },
+    pause: () => pause(),
   };
 }
-/** ===== Build dynamic table ===== */
-function renderHeader(colTitles){
-  const colgroup = document.getElementById("colgroup");
-  const thead = document.getElementById("thead-row");
-  colgroup.innerHTML = "";
-  thead.innerHTML = "";
-  colTitles.forEach(() => {
-    const c = document.createElement("col");
-    c.className = "col";
-    colgroup.appendChild(c);
-  });
-  colTitles.forEach(t => {
-    const th = document.createElement("th");
-    th.textContent = t;
-    thead.appendChild(th);
-  });
-}
 
-function buildRow(sample, idx){
-  const tbody = document.getElementById("samples-body");
-  const tr = document.createElement("tr");
+/* ========================= build grid ========================= */
+function buildSampleRow(sample, sampleIdx){
+  const row = document.createElement("div");
+  row.className = "columns is-multiline is-centered";
 
-  sample.cols.forEach((col, j) => {
-    const td = document.createElement("td");
+  sample.cols.forEach((col, colIdx) => {
+    const colDiv = document.createElement("div");
+    colDiv.className = "column is-one-quarter has-text-centered";
 
-    // Title line
-    const title = document.createElement("div");
-    title.className = "cellTitle";
-    title.textContent = `${sample.name} · ${col.title}`;
-    td.appendChild(title);
+    const h4 = document.createElement("h4");
+    h4.className = "title is-4";
+    h4.textContent = col.title;
+    colDiv.appendChild(h4);
 
-    // Viewer
+    const label = document.createElement("p");
+    label.className = "has-text-left";
+    label.style.fontWeight = "700";
+    label.style.marginBottom = "8px";
+    label.textContent = `${sample.name} · ${col.title}`;
+    colDiv.appendChild(label);
+
     const viewer = document.createElement("div");
     viewer.className = "viewer";
-    td.appendChild(viewer);
+    colDiv.appendChild(viewer);
 
-    const vidDomId = `viddom-${idx}-${j}`;
+    const vidId = `vid-${sampleIdx}-${colIdx}`;
 
     viewer.innerHTML = `
       <a-scene embedded vr-mode-ui="enabled:true">
         <a-assets>
-          <video id="${vidDomId}" crossorigin="anonymous" playsinline webkit-playsinline preload="auto">
-            <source src="${col.video}" type="video/webm">
-          </video>
+          <video id="${vidId}" src="${col.video}"
+                 crossorigin="anonymous"
+                 playsinline webkit-playsinline
+                 preload="auto"></video>
         </a-assets>
-
-        <a-videosphere src="#${vidDomId}" rotation="0 -90 0"></a-videosphere>
+        <a-videosphere src="#${vidId}" rotation="0 -90 0"></a-videosphere>
         <a-camera look-controls="enabled:true"></a-camera>
       </a-scene>
 
@@ -385,11 +365,12 @@ function buildRow(sample, idx){
     `;
 
     const v = viewer.querySelector("video");
-    const btnPP = viewer.querySelector('[data-role="pp"]');
+    v.muted = true;
+
     const btnRew = viewer.querySelector('[data-role="rew"]');
+    const btnPP  = viewer.querySelector('[data-role="pp"]');
     const sceneEl = viewer.querySelector("a-scene");
 
-    // camera yaw
     let camEl = null;
     function getCameraYawRad(){ return camEl ? camEl.object3D.rotation.y : 0; }
     sceneEl.addEventListener("loaded", () => {
@@ -397,19 +378,15 @@ function buildRow(sample, idx){
     });
 
     async function playVideo(){
-      // mute to avoid mixing the video's own audio track (if any)
-      v.muted = true;
       v.loop = false;
       await v.play();
     }
 
-    // Audio controller (NO UI)
     const ctrlReady = (async () => {
-      try{ return await createFOAController(col.title, col.audio, getCameraYawRad); }
+      try{ return await createFOAController(col.audio, getCameraYawRad); }
       catch(e){ showErr(e); throw e; }
     })();
 
-    // Overlay drives THIS column's audio + video
     btnPP.addEventListener("click", async () => {
       try{
         const ctrl = await ctrlReady;
@@ -420,13 +397,13 @@ function buildRow(sample, idx){
           await ctrl.playFrom(t);
           await playVideo();
           btnPP.textContent = "Pause";
-        }else{
+        } else {
           const t = ctrl.pause();
           v.pause();
           if (typeof t === "number" && isFinite(t)) v.currentTime = t;
           btnPP.textContent = "Play";
         }
-      }catch(e){ showErr(e); }
+      } catch(e){ showErr(e); }
     });
 
     btnRew.addEventListener("click", async () => {
@@ -437,30 +414,23 @@ function buildRow(sample, idx){
         await ctrl.playFrom(0);
         await playVideo();
         btnPP.textContent = "Pause";
-      }catch(e){ showErr(e); }
+      } catch(e){ showErr(e); }
     });
 
-    v.addEventListener("ended", async () => {
-      btnPP.textContent = "Play";
-      try{ const ctrl = await ctrlReady; ctrl.pause(); }catch(e){}
-    });
-
-    tr.appendChild(td);
+    row.appendChild(colDiv);
   });
 
-  tbody.appendChild(tr);
+  return row;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   try{
-    if (!SAMPLES.length) return;
-
-    // take titles from the first sample's columns
-    renderHeader(SAMPLES[0].cols.map(c => c.title));
-
-    SAMPLES.forEach((s, i) => buildRow(s, i));
-  }catch(e){ showErr(e); }
+    const root = document.getElementById("demo-root");
+    root.innerHTML = "";
+    SAMPLES.forEach((s, i) => root.appendChild(buildSampleRow(s, i)));
+  } catch(e){ showErr(e); }
 });
 </script>
+
 </body>
 </html>
