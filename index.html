@@ -163,6 +163,7 @@ function estimateRMS(buffer, ch=0, n=20000){
 }
 
 async function createFOAPlayer(containerEl, label, audioUrl, getCameraYawRad){
+async function createFOAPlayer(containerEl, label, audioUrl, getCameraYawRad){
   containerEl.innerHTML = "";
 
   const title = document.createElement("div");
@@ -230,7 +231,7 @@ async function createFOAPlayer(containerEl, label, audioUrl, getCameraYawRad){
   let startedAt = 0;
   let offset = 0;
 
-  async function ensureLoaded(){ // <-- 只在这个 createFOAPlayer 里有一个 ensureLoaded
+  async function ensureLoaded(){
     if (!buffer) {
       buffer = await decodeBuffer(audioUrl);
       const rms0 = estimateRMS(buffer, 0);
@@ -278,12 +279,13 @@ async function createFOAPlayer(containerEl, label, audioUrl, getCameraYawRad){
   }
 
   function pauseOmnitone(){
-    if (!isPlaying) return;
+    if (!isPlaying) return offset;
     const played = audioCtx.currentTime - startedAt;
     offset = offset + played;
     if (srcNode) { try { srcNode.stop(); } catch(e){} }
     isPlaying = false;
     btnPlay.textContent = "Play (Omnitone)";
+    return offset;
   }
 
   // ----- Buttons -----
@@ -343,6 +345,27 @@ async function createFOAPlayer(containerEl, label, audioUrl, getCameraYawRad){
       dryNode = src;
     } catch(e){ showErr(e); }
   });
+
+  // ---- Controller returned to caller (for overlay sync) ----
+  return {
+    label,
+    ensureLoaded,
+    isPlaying: () => isPlaying,
+    getOffset: () => offset,
+    playFrom: async (sec) => { await resumeAudio(); await ensureLoaded(); startOmnitone(sec); },
+    pause: () => pauseOmnitone(),
+    stop: () => stopAll(),
+    rewind: async () => { await resumeAudio(); await ensureLoaded(); startOmnitone(0); },
+    toggle: async (secIfPlay) => {
+      await resumeAudio();
+      await ensureLoaded();
+      if (!isPlaying) startOmnitone(secIfPlay ?? offset);
+      else pauseOmnitone();
+    }
+  };
+}
+
+function buildRow(sample, idx){
 }
 
 function buildRow(sample, idx){
@@ -410,24 +433,66 @@ function buildRow(sample, idx){
     await v.play();
   }
 
+  // ---- Overlay controls (SYNC: Ours audio drives video) ----
   btnPP.addEventListener("click", async () => {
     try {
-      if (v.paused) { await playVideo(); btnPP.textContent="Pause"; }
-      else { v.pause(); btnPP.textContent="Play"; }
+      const ctrl = await oursReady; // wait until Ours audio UI is ready
+      await resumeAudio();
+
+      if (v.paused) {
+        // Start BOTH from current video time (so Play after scrub stays aligned)
+        const t = Math.max(0, v.currentTime || 0);
+        await ctrl.playFrom(t);
+        await playVideo();
+        btnPP.textContent = "Pause";
+      } else {
+        // Pause audio first, then snap video to audio offset (keeps tighter sync)
+        const t = ctrl.pause();
+        v.pause();
+        if (typeof t === "number" && isFinite(t)) v.currentTime = t;
+        btnPP.textContent = "Play";
+      }
     } catch(e) { showErr(e); }
   });
+
   btnRew.addEventListener("click", async () => {
-    try { v.currentTime = 0; await playVideo(); btnPP.textContent="Pause"; } catch(e) { showErr(e); }
+    try {
+      const ctrl = await oursReady;
+      await resumeAudio();
+      v.currentTime = 0;
+      await ctrl.playFrom(0);
+      await playVideo();
+      btnPP.textContent = "Pause";
+    } catch(e) { showErr(e); }
   });
-  v.addEventListener("ended", () => btnPP.textContent="Play");
+
+  // If video ends (or user pauses it via built-in UI), also pause Ours audio
+  v.addEventListener("ended", async () => {
+    btnPP.textContent = "Play";
+    try { const ctrl = await oursReady; ctrl.pause(); } catch(e){}
+  });
+  v.addEventListener("pause", async () => {
+    // ignore the pause event we cause ourselves after finishing
+    try {
+      const ctrl = await oursReady;
+      if (ctrl.isPlaying && ctrl.isPlaying()) {
+        const t = ctrl.pause();
+        if (typeof t === "number" && isFinite(t) && !v.ended) v.currentTime = t;
+        btnPP.textContent = "Play";
+      }
+    } catch(e){}
+  });
 
   // Create audio players
-  (async () => {
+  // NOTE: we keep per-column buttons, but overlay controls will drive *Ours* for the reviewer experience.
+  let oursCtrl = null;
+  const oursReady = (async () => {
     try {
       await createFOAPlayer(tdB1, "Baseline",   sample.b1, getCameraYawRad);
       await createFOAPlayer(tdB2, "Baseline 2", sample.b2, getCameraYawRad);
-      await createFOAPlayer(tdO,  "Ours",       sample.ours, getCameraYawRad);
-    } catch(e) { showErr(e); }
+      oursCtrl = await createFOAPlayer(tdO,  "Ours",       sample.ours, getCameraYawRad);
+      return oursCtrl;
+    } catch(e) { showErr(e); throw e; }
   })();
 }
 
