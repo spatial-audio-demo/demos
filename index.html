@@ -242,7 +242,7 @@
         <div id="errbox"></div>
 
         <p class="has-text-centered" style="margin-top: 18px; color:#666;">
-          // We would like to thank Omnitone for the 360° interactive spatial audio rendering.
+          We would like to thank Omnitone for the 360° interactive spatial audio rendering.
         </p>
       </div>
     </div>
@@ -447,17 +447,29 @@ function buildSampleRow(sample, sampleIdx){
       await v.play();
     }
 
-    const ctrlReady = (async () => {
-      try{ return await createFOAController(col.audio, getCameraYawRad); }
-      catch(e){ showErr(e); throw e; }
-    })();
+    // Lazy init: only create AudioContext/Omnitone AFTER user clicks Play/Rewind
+    let ctrlPromise = null;
+    function getCtrl(){
+      if (!ctrlPromise){
+        ctrlPromise = (async () => {
+          try{
+            return await createFOAController(col.audio, getCameraYawRad);
+          }catch(e){
+            // allow retry if it failed
+            ctrlPromise = null;
+            throw e;
+          }
+        })();
+      }
+      return ctrlPromise;
+    }
 
     btnPP.addEventListener("pointerdown", async (e) => {
       console.log("PLAY pressed");
       e.preventDefault();
       e.stopPropagation();
       try{
-        const ctrl = await ctrlReady;
+        const ctrl = await getCtrl();
         await resumeAudio();
     
         if (v.paused){
@@ -478,7 +490,7 @@ function buildSampleRow(sample, sampleIdx){
       e.preventDefault();
       e.stopPropagation();
       try{
-        const ctrl = await ctrlReady;
+        const ctrl = await getCtrl();
         await resumeAudio();
         v.currentTime = 0;
         await ctrl.playFrom(0);
