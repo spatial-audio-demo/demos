@@ -15,7 +15,7 @@
 
   <!-- ========= 360° video + FOA spatial audio ========= -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/omnitone@0.3.2/build/omnitone.min.js"></script>
+  <script src="https://www.gstatic.com/external_hosted/omnitone/build/omnitone.min.js"></script>
 
   <style>
     /* ============================================================
@@ -284,36 +284,7 @@ async function resumeAudio(){
     await audioCtx.resume();
   }
 }
-// Ensure Omnitone is available (CDN fallback). Must be called after a user gesture.
-let _omnitonePromise = null;
-function ensureOmnitone(){
-  if (window.Omnitone) return Promise.resolve(window.Omnitone);
-  if (_omnitonePromise) return _omnitonePromise;
 
-  const candidates = [
-    "https://cdn.jsdelivr.net/npm/omnitone@0.3.2/build/omnitone.min.js",
-    "https://unpkg.com/omnitone@0.3.2/build/omnitone.min.js",
-    "https://cdnjs.cloudflare.com/ajax/libs/omnitone/0.3.2/omnitone.min.js"
-  ];
-
-  _omnitonePromise = new Promise((resolve, reject) => {
-    let i = 0;
-    const tryNext = () => {
-      if (window.Omnitone) return resolve(window.Omnitone);
-      if (i >= candidates.length) return reject(new Error("Omnitone failed to load from all CDNs."));
-      const url = candidates[i++];
-      const s = document.createElement("script");
-      s.src = url;
-      s.async = true;
-      s.onload = () => window.Omnitone ? resolve(window.Omnitone) : tryNext();
-      s.onerror = tryNext;
-      document.head.appendChild(s);
-    };
-    tryNext();
-  }).catch(err => { _omnitonePromise = null; throw err; });
-
-  return _omnitonePromise;
-}
 
 
 async function decodeBuffer(url){
@@ -334,7 +305,6 @@ function yawToMat3_rowMajor(yaw){
 /* ========================= audio controller ========================= */
 async function createFOAController(audioUrl, getCameraYawRad){
   await resumeAudio();
-  await ensureOmnitone();
   const r = Omnitone.createFOARenderer(audioCtx);
   await r.initialize();
 
