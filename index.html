@@ -3,9 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Visually-Guided Spatial Audio Generation for 360◦ In-the-Wild Speech Scenes</title>
+  <title>Samples from YT-SPEECH Dataset (Panoramic Videos)</title>
 
- 
+  <!-- =======================
+       STYLE: ViSAGe-like template (Bulma + Google Sans)
+       ======================= -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css?family=Google+Sans:400,600,700|Noto+Sans:400,600,700|Castoro:400,700&display=swap" rel="stylesheet">
@@ -101,7 +103,7 @@
     <div class="container is-max-desktop">
       <div class="columns is-centered">
         <div class="column has-text-centered">
-          <h1 class="title is-1 publication-title">Visually-Guided Spatial Audio Generation for 360◦ In-the-Wild Speech Scenes</h1>
+          <h1 class="title is-1 publication-title">Samples from YT-SPEECH Dataset (Panoramic Videos)</h1>
 
           <div class="is-size-5 publication-authors">
             <span class="author-block">Anonymous Authors</span>
@@ -168,7 +170,7 @@
 <section class="hero is-small">
   <div class="hero-body">
     <div class="container is-max-desktop">
-      <h3 class="title is-3 has-text-centered">Samples from YT-SPEECH Dataset</h3>
+      <h3 class="title is-3 has-text-centered">Comparison with Baselines (Panoramic Videos)</h3>
 
       <div id="demo-root"></div>
       <div id="errbox"></div>
@@ -194,10 +196,10 @@ const SAMPLES = [
   {
     name: "Sample 1",
     cols: [
-      { title: "GT",         video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_gt.wav"},
-      { title: "Baseline",   video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_pred.wav"},
-      { title: "Baseline 2", video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_pred.wav"},
-      { title: "Ours",       video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_pred.wav"},
+      { title: "GT",         video: "videos/Gb24E-LqZyE_31.webm?" + VER, audio: "audios/Gb24E-LqZyE_31_gt.wav?" + VER },
+      { title: "Baseline",   video: "videos/Gb24E-LqZyE_31.webm?" + VER, audio: "audios/Gb24E-LqZyE_31_baseline.wav?" + VER },
+      { title: "Baseline 2", video: "videos/Gb24E-LqZyE_31.webm?" + VER, audio: "audios/Gb24E-LqZyE_31_baseline2.wav?" + VER },
+      { title: "Ours",       video: "videos/Gb24E-LqZyE_31.webm?" + VER, audio: "audios/Gb24E-LqZyE_31_pred.wav?" + VER },
     ],
   },
 ];
@@ -330,7 +332,6 @@ function buildSampleRow(sample, sampleIdx){
 
     const viewer = document.createElement("div");
     viewer.className = "viewer";
-    viewer.__isPlaying = false;
     colDiv.appendChild(viewer);
 
     const vidId = `vid-${sampleIdx}-${colIdx}`;
@@ -392,18 +393,16 @@ function buildSampleRow(sample, sampleIdx){
       e.preventDefault(); e.stopPropagation();
       try{
         const ctrl = await getCtrl();
-
-        if (!viewer.__isPlaying){
+        
+        if (v.paused){
           const t = Math.max(0, v.currentTime || 0);
           await ctrl.playFrom(t);
           await playVideo();
-          viewer.__isPlaying = true;
           btnPP.textContent = "Pause";
         } else {
           const t = ctrl.pause();
           v.pause();
           if (typeof t === "number" && isFinite(t)) v.currentTime = t;
-          viewer.__isPlaying = false;
           btnPP.textContent = "Play";
         }
       } catch(err){ showErr(err); }
@@ -411,28 +410,6 @@ function buildSampleRow(sample, sampleIdx){
 
     btnRew.addEventListener("pointerdown", async (e) => {
       e.preventDefault(); e.stopPropagation();
-      try{
-        const ctrl = await getCtrl();
-        v.currentTime = 0;
-        await ctrl.playFrom(0);
-        await playVideo();
-        viewer.__isPlaying = true;
-        btnPP.textContent = "Pause";
-      } catch(err){ showErr(err); }
-    });
-
-    // Keep UI state consistent if playback ends/pauses outside our buttons
-    v.addEventListener("ended", () => {
-      viewer.__isPlaying = false;
-      btnPP.textContent = "Play";
-    });
-    v.addEventListener("pause", () => {
-      if (viewer.__isPlaying){
-        viewer.__isPlaying = false;
-        btnPP.textContent = "Play";
-      }
-    });
-
       try{
         const ctrl = await getCtrl();
                 v.currentTime = 0;
