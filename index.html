@@ -377,20 +377,32 @@ async function createFOAController(audioUrl, getCameraYawRad){
       }
     }catch(e){}
 
-    // Some browsers/Omnitone versions don't accept a direct multichannel connect.
-    // Use a ChannelSplitter to route 4 channels explicitly.
+    // Route 4ch safely into Omnitone:
+    // splitter(4) -> merger(4) -> r.input (single input)
     if (buffer.numberOfChannels >= 4){
-      const split = audioCtx.createChannelSplitter(buffer.numberOfChannels);
+      // Force discrete 4ch from the source
+      srcNode.channelCount = 4;
+      srcNode.channelCountMode = "explicit";
+      srcNode.channelInterpretation = "discrete";
+    
+      const split = audioCtx.createChannelSplitter(4);
+      const merge = audioCtx.createChannelMerger(4);
+    
       srcNode.connect(split);
-      // map ch0..3 -> input 0..3
-      split.connect(r.input, 0, 0);
-      split.connect(r.input, 1, 1);
-      split.connect(r.input, 2, 2);
-      split.connect(r.input, 3, 3);
+    
+      // ch0..3 -> merge inputs 0..3
+      split.connect(merge, 0, 0);
+      split.connect(merge, 1, 1);
+      split.connect(merge, 2, 2);
+      split.connect(merge, 3, 3);
+    
+      // IMPORTANT: only ONE connection into r.input
+      merge.connect(r.input);
     }else{
-      // fallback (will sound like mono/broken FOA if <4ch)
+      // fallback (not true FOA if <4ch)
       srcNode.connect(r.input);
     }
+    
 
     offset = Math.max(0, Math.min(sec, buffer.duration - 0.001));
     startedAt = audioCtx.currentTime;
