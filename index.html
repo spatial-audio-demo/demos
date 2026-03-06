@@ -113,6 +113,30 @@
       pointer-events: auto !important;
       touch-action: manipulation; /* helps on trackpad/touch */
     }
+
+    /* ===== HARD FIX: ensure overlay is truly on top and receives pointer events ===== */
+    .viewer{
+      isolation: isolate;         /* <-- KEY: force a stacking context */
+    }
+    
+    .viewer a-scene,
+    .viewer .a-canvas{
+      z-index: 1 !important;
+    }
+    
+    /* Make the overlay layer cover the whole viewer, but only buttons are clickable */
+    .viewer .overlay-controls{
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      padding: 12px !important;
+      z-index: 2147483647 !important;  /* <-- extremely high */
+      pointer-events: none !important; /* overlay itself not clickable */
+    }
+    
+    .viewer .overlay-controls .ovbtn{
+      pointer-events: auto !important; /* <-- ONLY buttons clickable */
+    }
   </style>
 </head>
 
@@ -171,7 +195,7 @@
           <h2 class="title is-3">Abstract</h2>
           <div class="content has-text-justified">
             <p>
-              Spatial audio is a key component of immersive $360^\circ$ media, yet high-quality spatial capture remains limited in real-world speech-dominant scenes. We study visually guided First-Order Ambisonics (FOA) speech spatialization in the wild: given aligned $360^\circ$ video and an omnidirectional audio track, the goal is to reconstruct coherent spatial audio that remains stable under viewpoint changes. To support this task, we introduce YT-SPEECH, a speech-oriented $360^\circ$ video-FOA dataset curated from YouTube. We propose a two-stage Localizer-Renderer framework, where an audio-visual segmentation backbone provides frame-wise spatial heatmaps and a conditional complex-domain U-Net reconstructs directional FOA signals from the omnidirectional channel. A confidence-based gating strategy stabilizes conditioning under ambiguous acoustic conditions. Experiments show improved reconstruction fidelity, spatial accuracy, and perceptual speech quality relative to ablated variants and prior approaches.
+              Spatial audio is a key component of immersive 360° media, yet high-quality spatial capture remains limited in real-world speech-dominant scenes. We study visually guided First-Order Ambisonics (FOA) speech spatialization in the wild: given aligned 360° video and an omnidirectional audio track, the goal is to reconstruct coherent spatial audio that remains stable under viewpoint changes. To support this task, we introduce YT-SPEECH, a speech-oriented 360° video-FOA dataset curated from YouTube. We propose a two-stage Localizer-Renderer framework, where an audio-visual segmentation backbone provides frame-wise spatial heatmaps and a conditional complex-domain U-Net reconstructs directional FOA signals from the omnidirectional channel. A confidence-based gating strategy stabilizes conditioning under ambiguous acoustic conditions. Experiments show improved reconstruction fidelity, spatial accuracy, and perceptual speech quality relative to ablated variants and prior approaches.
             </p>
           </div>
         </div>
@@ -201,7 +225,7 @@
         <h3 class="title is-3">Guidelines for Listening Demo Videos</h3>
         <ul class="is-size-5" style="display:inline-block; text-align:left; list-style: disc; padding-left: 1.5em;">
           <li>Please use your headphones 🎧 for the best audio experience.</li>
-          <li>Drag the 360° video to change the view direction (yaw rotation).</li>
+          <li>Feel free to rotate the video to assess the fidelity of the generated three-dimensional sound field.</li>
           <li>Use <b>Play</b> to start/pause the spatial audio; <b>Rewind</b> to restart.</li>
         </ul>
       </div>
@@ -212,13 +236,13 @@
   <section class="hero is-small">
     <div class="hero-body">
       <div class="container is-max-desktop">
-        <h3 class="title is-3 has-text-centered">Comparison with Baselines (Panoramic Videos)</h3>
+        <h3 class="title is-3 has-text-centered">Samples from YT-SPEECH Dataset (Panoramic Videos)</h3>
 
         <div id="demo-root"></div>
         <div id="errbox"></div>
 
         <p class="has-text-centered" style="margin-top: 18px; color:#666;">
-          We would like to thank Omnitone for the 360° interactive spatial audio rendering.
+          // We would like to thank Omnitone for the 360° interactive spatial audio rendering.
         </p>
       </div>
     </div>
@@ -428,11 +452,14 @@ function buildSampleRow(sample, sampleIdx){
       catch(e){ showErr(e); throw e; }
     })();
 
-    btnPP.addEventListener("click", async () => {
+    btnPP.addEventListener("pointerdown", async (e) => {
+      console.log("PLAY pressed");
+      e.preventDefault();
+      e.stopPropagation();
       try{
         const ctrl = await ctrlReady;
         await resumeAudio();
-
+    
         if (v.paused){
           const t = Math.max(0, v.currentTime || 0);
           await ctrl.playFrom(t);
@@ -444,10 +471,12 @@ function buildSampleRow(sample, sampleIdx){
           if (typeof t === "number" && isFinite(t)) v.currentTime = t;
           btnPP.textContent = "Play";
         }
-      } catch(e){ showErr(e); }
+      } catch(err){ showErr(err); }
     });
 
-    btnRew.addEventListener("click", async () => {
+    btnRew.addEventListener("pointerdown", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       try{
         const ctrl = await ctrlReady;
         await resumeAudio();
@@ -455,7 +484,7 @@ function buildSampleRow(sample, sampleIdx){
         await ctrl.playFrom(0);
         await playVideo();
         btnPP.textContent = "Pause";
-      } catch(e){ showErr(e); }
+      } catch(err){ showErr(err); }
     });
 
     row.appendChild(colDiv);
