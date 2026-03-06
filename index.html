@@ -3,11 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Samples from YT-SPEECH Dataset (Panoramic Videos)</title>
+  <title>Visually-Guided Spatial Audio Generation for 360◦ In-the-Wild Speech Scenes</title>
 
-  <!-- =======================
-       STYLE: ViSAGe-like template (Bulma + Google Sans)
-       ======================= -->
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css?family=Google+Sans:400,600,700|Noto+Sans:400,600,700|Castoro:400,700&display=swap" rel="stylesheet">
@@ -103,7 +101,7 @@
     <div class="container is-max-desktop">
       <div class="columns is-centered">
         <div class="column has-text-centered">
-          <h1 class="title is-1 publication-title">Samples from YT-SPEECH Dataset (Panoramic Videos)</h1>
+          <h1 class="title is-1 publication-title">Visually-Guided Spatial Audio Generation for 360◦ In-the-Wild Speech Scenes</h1>
 
           <div class="is-size-5 publication-authors">
             <span class="author-block">Anonymous Authors</span>
@@ -205,22 +203,11 @@ const SAMPLES = [
 ];
 
 /* ========================= helpers ========================= */
-let audioCtx = null;
-
 function showErr(e){
   console.error(e);
   const box = document.getElementById("errbox");
   box.style.display = "block";
   box.textContent = (e && e.stack) ? e.stack : String(e);
-}
-
-async function resumeAudio(){
-  if (!audioCtx){
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
-  }
-  if (audioCtx.state !== "running"){
-    await audioCtx.resume();
-  }
 }
 
 function yawToMat3_rowMajor(yaw){
@@ -231,31 +218,41 @@ function yawToMat3_rowMajor(yaw){
 }
 
 /* ============================================================
-   FOA -> Omnitone controller (MediaElementSource; stable for you)
-   - No extra UI. Controlled only by overlay buttons.
+   FOA -> Omnitone controller (WORKING version)
+   Key choices (match your previously-working demo):
+   - One AudioContext per column (most reliable across browsers)
+   - HTMLAudioElement + createMediaElementSource (no fetch/decode)
+   - Omnitone loaded from gstatic
    ============================================================ */
 async function createFOAController(audioUrl, getCameraYawRad){
-  await resumeAudio();
-
   if (!window.Omnitone){
     throw new Error("Omnitone is not available (script failed to load).");
   }
 
-  const r = Omnitone.createFOARenderer(audioCtx);
+  // IMPORTANT: per-column AudioContext (do NOT force sampleRate)
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+  // Omnitone renderer
+  const r = Omnitone.createFOARenderer(ctx);
   await r.initialize();
 
-  const gainOut = audioCtx.createGain();
+  // Output gain
+  const gainOut = ctx.createGain();
   gainOut.gain.value = 2.8;
   r.output.connect(gainOut);
-  gainOut.connect(audioCtx.destination);
+  gainOut.connect(ctx.destination);
 
+  // Rotation update
   function applyYaw(yawRad){
     const m3 = yawToMat3_rowMajor(ROT_SIGN * yawRad);
     if (typeof r.setRotationMatrix3 === "function") r.setRotationMatrix3(m3);
     else if (typeof r.setRotationMatrix === "function") r.setRotationMatrix(m3);
     else if (r._foaRotator && typeof r._foaRotator.setRotationMatrix3 === "function") r._foaRotator.setRotationMatrix3(m3);
   }
-  (function tick(){ applyYaw(getCameraYawRad()); requestAnimationFrame(tick); })();
+  (function tick(){
+    applyYaw(getCameraYawRad());
+    requestAnimationFrame(tick);
+  })();
 
   // Hidden <audio> element
   const audioEl = document.createElement("audio");
@@ -264,15 +261,19 @@ async function createFOAController(audioUrl, getCameraYawRad){
   audioEl.src = audioUrl;
   audioEl.loop = false;
   audioEl.muted = false;
+  audioEl.volume = 1.0;
   audioEl.style.display = "none";
   document.body.appendChild(audioEl);
 
-  const src = audioCtx.createMediaElementSource(audioEl);
+  // Feed multichannel stream into Omnitone
+  const src = ctx.createMediaElementSource(audioEl);
   src.connect(r.input);
 
-  let isPlaying = false;
+  async function ensureRunning(){
+    if (ctx.state !== "running") await ctx.resume();
+  }
 
-  async function ensureLoaded(){
+  async function ensureMetadata(){
     if (audioEl.readyState >= 1) return;
     await new Promise((resolve) => {
       const onMeta = () => { audioEl.removeEventListener("loadedmetadata", onMeta); resolve(); };
@@ -282,28 +283,23 @@ async function createFOAController(audioUrl, getCameraYawRad){
   }
 
   async function playFrom(sec){
-    await resumeAudio();
-    await ensureLoaded();
+    await ensureRunning();
+    await ensureMetadata();
     audioEl.currentTime = Math.max(0, sec || 0);
     await audioEl.play();
-    isPlaying = true;
   }
 
   function pause(){
     audioEl.pause();
-    isPlaying = false;
     return audioEl.currentTime || 0;
   }
 
   function stop(){
     audioEl.pause();
     audioEl.currentTime = 0;
-    isPlaying = false;
   }
 
   return {
-    ensureLoaded,
-    isPlaying: () => isPlaying,
     playFrom,
     pause,
     stop,
@@ -395,8 +391,7 @@ function buildSampleRow(sample, sampleIdx){
       e.preventDefault(); e.stopPropagation();
       try{
         const ctrl = await getCtrl();
-        await resumeAudio();
-
+        
         if (v.paused){
           const t = Math.max(0, v.currentTime || 0);
           await ctrl.playFrom(t);
@@ -415,8 +410,7 @@ function buildSampleRow(sample, sampleIdx){
       e.preventDefault(); e.stopPropagation();
       try{
         const ctrl = await getCtrl();
-        await resumeAudio();
-        v.currentTime = 0;
+                v.currentTime = 0;
         await ctrl.playFrom(0);
         await playVideo();
         btnPP.textContent = "Pause";
