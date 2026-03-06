@@ -351,88 +351,61 @@ async function createFOAController(audioUrl, getCameraYawRad){
     else if (r._foaRotator && typeof r._foaRotator.setRotationMatrix3 === "function") r._foaRotator.setRotationMatrix3(m3);
   }
   (function tick(){ applyYaw(getCameraYawRad()); requestAnimationFrame(tick); })();
-
-  let buffer = null;
-  let srcNode = null;
-  let isPlaying = false;
-  let startedAt = 0;
-  let offset = 0;
-
-  async function ensureLoaded(){
-    if (!buffer) buffer = await decodeBuffer(audioUrl);
-  }
-
-  function start(sec){
-    if (!buffer) return;
-    if (srcNode) { try { srcNode.stop(); } catch(e){} }
-
-    srcNode = audioCtx.createBufferSource();
-    srcNode.buffer = buffer;
-    // Force discrete 4ch input (W,Y,Z,X) -> Omnitone FOA renderer.
-    try{
-      if (r.input){
-        r.input.channelCount = 4;
-        r.input.channelCountMode = "explicit";
-        r.input.channelInterpretation = "discrete";
-      }
-    }catch(e){}
-
-    // Route 4ch safely into Omnitone:
-    // splitter(4) -> merger(4) -> r.input (single input)
-    if (buffer.numberOfChannels >= 4){
-      // Force discrete 4ch from the source
-      srcNode.channelCount = 4;
-      srcNode.channelCountMode = "explicit";
-      srcNode.channelInterpretation = "discrete";
-    
-      const split = audioCtx.createChannelSplitter(4);
-      const merge = audioCtx.createChannelMerger(4);
-    
-      srcNode.connect(split);
-    
-      // ch0..3 -> merge inputs 0..3
-      split.connect(merge, 0, 0);
-      split.connect(merge, 1, 1);
-      split.connect(merge, 2, 2);
-      split.connect(merge, 3, 3);
-    
-      // IMPORTANT: only ONE connection into r.input
-      merge.connect(r.input);
-    }else{
-      // fallback (not true FOA if <4ch)
-      srcNode.connect(r.input);
+  // ======= MediaElementSource version (stable in your working demo) =======
+    const audioEl = document.createElement("audio");
+    audioEl.crossOrigin = "anonymous";
+    audioEl.preload = "auto";
+    audioEl.src = audioUrl;
+    audioEl.loop = false;
+    audioEl.muted = false;              // <-- make sure NOT muted
+    audioEl.style.display = "none";
+    document.body.appendChild(audioEl);  // keep it alive
+  
+    const src = audioCtx.createMediaElementSource(audioEl);
+    src.connect(r.input);                // 4ch stream goes into Omnitone
+    // (r.output already goes to destination via gainOut above)
+  
+    let isPlaying = false;
+  
+    async function ensureLoaded(){
+      // Force the element to load metadata so duration/currentTime work reliably
+      if (audioEl.readyState >= 1) return;
+      await new Promise((resolve) => {
+        const onMeta = () => { audioEl.removeEventListener("loadedmetadata", onMeta); resolve(); };
+        audioEl.addEventListener("loadedmetadata", onMeta);
+        audioEl.load();
+      });
     }
-    
-
-    offset = Math.max(0, Math.min(sec, buffer.duration - 0.001));
-    startedAt = audioCtx.currentTime;
-    srcNode.start(0, offset);
-    isPlaying = true;
-
-    srcNode.onended = () => {
-      if (isPlaying){
-        isPlaying = false;
-        offset = 0;
-      }
+  
+    async function playFrom(sec){
+      await resumeAudio();
+      await ensureLoaded();
+      audioEl.currentTime = Math.max(0, sec || 0);
+      await audioEl.play();
+      isPlaying = true;
+    }
+  
+    function pause(){
+      audioEl.pause();
+      isPlaying = false;
+      return audioEl.currentTime || 0;
+    }
+  
+    function stop(){
+      audioEl.pause();
+      audioEl.currentTime = 0;
+      isPlaying = false;
+    }
+  
+    return {
+      ensureLoaded,
+      isPlaying: () => isPlaying,
+      playFrom,
+      pause,
+      stop,
+      getOffset: () => (audioEl.currentTime || 0),
     };
-  }
-
-  function pause(){
-    if (!isPlaying) return offset;
-    const played = audioCtx.currentTime - startedAt;
-    offset = offset + played;
-    if (srcNode) { try { srcNode.stop(); } catch(e){} }
-    isPlaying = false;
-    return offset;
-  }
-
-  return {
-    ensureLoaded,
-    isPlaying: () => isPlaying,
-    playFrom: async (sec) => { await ensureLoaded(); start(sec); },
-    pause: () => pause(),
-  };
-}
+  
 
 /* ========================= build grid ========================= */
 function buildSampleRow(sample, sampleIdx){
