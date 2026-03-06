@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Samples from YT-SPEECH Dataset (Panoramic Videos)</title>
+  <title>Visually-Guided Spatial Audio Generation for 360° In-the-Wild Speech Scenes</title>
 
   <!-- =======================
        STYLE: ViSAGe-like template (Bulma + Google Sans)
@@ -170,7 +170,7 @@
 <section class="hero is-small">
   <div class="hero-body">
     <div class="container is-max-desktop">
-      <h3 class="title is-3 has-text-centered">Comparison with Baselines (Panoramic Videos)</h3>
+      <h3 class="title is-3 has-text-centered">Samples from YT-SPEECH Dataset</h3>
 
       <div id="demo-root"></div>
       <div id="errbox"></div>
@@ -197,8 +197,8 @@ const SAMPLES = [
     name: "Sample 1",
     cols: [
       { title: "GT",         video: "videos/Gb24E-LqZyE_31.webm?" + VER, audio: "audios/Gb24E-LqZyE_31_gt.wav?" + VER },
-      { title: "Baseline",   video: "videos/Gb24E-LqZyE_31.webm?" + VER, audio: "audios/Gb24E-LqZyE_31_baseline.wav?" + VER },
-      { title: "Baseline 2", video: "videos/Gb24E-LqZyE_31.webm?" + VER, audio: "audios/Gb24E-LqZyE_31_baseline2.wav?" + VER },
+      { title: "Baseline",   video: "videos/Gb24E-LqZyE_31.webm?" + VER, audio: "audios/Gb24E-LqZyE_31_pred.wav?" + VER },
+      { title: "Baseline 2", video: "videos/Gb24E-LqZyE_31.webm?" + VER, audio: "audios/Gb24E-LqZyE_31_pred.wav?" + VER },
       { title: "Ours",       video: "videos/Gb24E-LqZyE_31.webm?" + VER, audio: "audios/Gb24E-LqZyE_31_pred.wav?" + VER },
     ],
   },
@@ -332,6 +332,7 @@ function buildSampleRow(sample, sampleIdx){
 
     const viewer = document.createElement("div");
     viewer.className = "viewer";
+    viewer.__isPlaying = false; // UI state flag (do not rely on v.paused)
     colDiv.appendChild(viewer);
 
     const vidId = `vid-${sampleIdx}-${colIdx}`;
@@ -393,16 +394,19 @@ function buildSampleRow(sample, sampleIdx){
       e.preventDefault(); e.stopPropagation();
       try{
         const ctrl = await getCtrl();
-        
-        if (v.paused){
+
+        if (!viewer.__isPlaying){
           const t = Math.max(0, v.currentTime || 0);
           await ctrl.playFrom(t);
           await playVideo();
-          btnPP.textContent = "Pause";
+          viewer.__isPlaying = true;
+          viewer.__isPlaying = true;
+        btnPP.textContent = "Pause";
         } else {
           const t = ctrl.pause();
           v.pause();
           if (typeof t === "number" && isFinite(t)) v.currentTime = t;
+          viewer.__isPlaying = false;
           btnPP.textContent = "Play";
         }
       } catch(err){ showErr(err); }
@@ -415,9 +419,26 @@ function buildSampleRow(sample, sampleIdx){
                 v.currentTime = 0;
         await ctrl.playFrom(0);
         await playVideo();
+        viewer.__isPlaying = true;
         btnPP.textContent = "Pause";
       } catch(err){ showErr(err); }
     });
+
+    // Keep UI consistent if playback stops outside our buttons
+    v.addEventListener("ended", () => {
+      viewer.__isPlaying = false;
+      btnPP.textContent = "Play";
+      try { getCtrl().then(c => c.stop && c.stop()); } catch(e){}
+    });
+    v.addEventListener("pause", () => {
+      // if user pauses via system / browser UI
+      if (viewer.__isPlaying){
+        viewer.__isPlaying = false;
+        btnPP.textContent = "Play";
+        try { getCtrl().then(c => c.pause && c.pause()); } catch(e){}
+      }
+    });
+
 
     row.appendChild(colDiv);
   });
