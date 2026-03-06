@@ -3,9 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Visually-Guided Spatial Audio Generation for 360° In-the-Wild Speech Scenes</title>
+  <title>Samples from YT-SPEECH Dataset (Panoramic Videos)</title>
 
-  <!-- ========= Styling (ViSAGe-like Bulma template) ========= -->
+  <!-- =======================
+       STYLE: ViSAGe-like template (Bulma + Google Sans)
+       ======================= -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css?family=Google+Sans:400,600,700|Noto+Sans:400,600,700|Castoro:400,700&display=swap" rel="stylesheet">
@@ -13,30 +15,31 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
 
-  <!-- ========= 360° video + FOA spatial audio ========= -->
+  <!-- =======================
+       360 viewer + Omnitone
+       - A-Frame is used for draggable 360 video
+       - Omnitone is loaded from gstatic (works in your network)
+       ======================= -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/omnitone@0.3.2/build/omnitone.min.js"></script>
+  <script src="https://www.gstatic.com/external_hosted/omnitone/build/omnitone.min.js"></script>
 
   <style>
     /* ============================================================
-       EDIT KNOBS HERE (you only need to touch these 4 values)
+       EDIT KNOBS HERE (only touch these if you want to resize)
        ============================================================ */
     :root{
-      --maxw: 1180px;         /* page width, ViSAGe-like */
-      --viewerH: 260px;       /* height of each 360 viewer */
-      --radius: 14px;         /* rounded corners */
-      --btnPadY: 8px;         /* overlay button padding */
+      --maxw: 1180px;        /* page max width */
+      --viewerH: 260px;      /* height of each 360 viewer */
+      --radius: 14px;        /* rounded corners */
+      --btnPadY: 8px;        /* overlay button padding */
     }
 
     body{
       font-family: "Google Sans","Noto Sans",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
+    .container.is-max-desktop{ max-width: var(--maxw) !important; }
 
-    .container.is-max-desktop{
-      max-width: var(--maxw) !important;
-    }
-
-    /* viewer */
+    /* viewer box */
     .viewer{
       position: relative;
       width: 100%;
@@ -44,11 +47,12 @@
       border-radius: var(--radius);
       overflow: hidden;
       background: #000;
+      isolation: isolate; /* make z-index deterministic */
       box-shadow: 0 1px 0 rgba(0,0,0,0.04);
     }
     .viewer a-scene{ width:100%; height:100%; }
 
-    /* Make sure overlay is clickable above the A-Frame canvas */
+    /* ensure overlay buttons clickable above A-Frame canvas */
     .viewer .a-canvas{ position: relative !important; z-index: 1 !important; }
     .overlay-controls{
       position: absolute;
@@ -56,8 +60,8 @@
       bottom: 12px;
       display: flex;
       gap: 10px;
-      z-index: 9999;
-      pointer-events: auto;
+      z-index: 2147483647;
+      pointer-events: none; /* only buttons accept clicks */
     }
     .ovbtn{
       pointer-events: auto;
@@ -74,8 +78,6 @@
     .ovbtn:active{ transform: translateY(1px); }
 
     .hintline{ margin-top: 10px; font-weight: 600; }
-    .section.hero.is-light { background: #f5f5f5; }
-    .subtitle-tight{ margin-top: .25rem !important; }
 
     #errbox{
       display:none;
@@ -88,180 +90,116 @@
       font-size: 13px;
       white-space: pre-wrap;
     }
-    /* ===== FIX overlay click (A-Frame canvas may sit above buttons) ===== */
-    .viewer { position: relative; }
-    
-    /* A-Frame scene/canvas layer: keep it below overlay */
-    .viewer a-scene {
-      position: relative !important;
-      z-index: 1 !important;
-    }
-    
-    .viewer canvas.a-canvas {
-      position: relative !important;
-      z-index: 1 !important;
-    }
-    
-    /* Overlay layer: always on top + clickable */
-    .viewer .overlay-controls{
-      position: absolute !important;
-      z-index: 99999 !important;
-      pointer-events: auto !important;
-    }
-    
-    .viewer .ovbtn{
-      pointer-events: auto !important;
-      touch-action: manipulation; /* helps on trackpad/touch */
-    }
-
-    /* ===== HARD FIX: ensure overlay is truly on top and receives pointer events ===== */
-    .viewer{
-      isolation: isolate;         /* <-- KEY: force a stacking context */
-    }
-    
-    .viewer a-scene,
-    .viewer .a-canvas{
-      z-index: 1 !important;
-    }
-    
-    /* Make the overlay layer cover the whole viewer, but only buttons are clickable */
-    .viewer .overlay-controls{
-      left: 0 !important;
-      right: 0 !important;
-      bottom: 0 !important;
-      padding: 12px !important;
-      z-index: 2147483647 !important;  /* <-- extremely high */
-      pointer-events: none !important; /* overlay itself not clickable */
-    }
-    
-    .viewer .overlay-controls .ovbtn{
-      pointer-events: auto !important; /* <-- ONLY buttons clickable */
-    }
   </style>
 </head>
 
 <body>
 
-  <!-- ========================= HERO ========================= -->
-  <section class="hero">
-    <div class="hero-body">
-      <div class="container is-max-desktop">
-        <div class="columns is-centered">
-          <div class="column has-text-centered">
-            <h1 class="title is-1 publication-title">
-              Visually-Guided Spatial Audio Generation for 360° In-the-Wild Speech Scenes
-            </h1>
-
-            <div class="is-size-5 publication-authors">
-              <span class="author-block">Anonymous Authors</span>
-            </div>
-
-            <div class="is-size-5 publication-authors">
-              <span class="author-block">Interspeech 2026 (under review)</span>
-            </div>
-
-            <div class="column has-text-centered" style="margin-top: 14px;">
-              <div class="publication-links">
-                <span class="link-block">
-                  <a href="#" class="external-link button is-normal is-rounded is-dark">
-                    <span class="icon"><i class="fas fa-file-pdf"></i></span>
-                    <span>Paper</span>
-                  </a>
-                </span>
-                <span class="link-block">
-                  <a href="#" class="external-link button is-normal is-rounded is-dark">
-                    <span class="icon"><i class="fab fa-github"></i></span>
-                    <span>Code</span>
-                  </a>
-                </span>
-              </div>
-            </div>
-
-            <p class="hintline">
-              🎧 Please wear headphones and drag the 360° video to experience spatial audio rotation.
-            </p>
-
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========================= ABSTRACT ========================= -->
-  <section class="section hero is-light">
+<!-- =========================
+     HERO
+     ========================= -->
+<section class="hero">
+  <div class="hero-body">
     <div class="container is-max-desktop">
-      <div class="columns is-centered has-text-centered">
-        <div class="column is-four-fifths">
-          <h2 class="title is-3">Abstract</h2>
-          <div class="content has-text-justified">
-            <p>
-              Spatial audio is a key component of immersive 360° media, yet high-quality spatial capture remains limited in real-world speech-dominant scenes. We study visually guided First-Order Ambisonics (FOA) speech spatialization in the wild: given aligned 360° video and an omnidirectional audio track, the goal is to reconstruct coherent spatial audio that remains stable under viewpoint changes. To support this task, we introduce YT-SPEECH, a speech-oriented 360° video-FOA dataset curated from YouTube. We propose a two-stage Localizer-Renderer framework, where an audio-visual segmentation backbone provides frame-wise spatial heatmaps and a conditional complex-domain U-Net reconstructs directional FOA signals from the omnidirectional channel. A confidence-based gating strategy stabilizes conditioning under ambiguous acoustic conditions. Experiments show improved reconstruction fidelity, spatial accuracy, and perceptual speech quality relative to ablated variants and prior approaches.
-            </p>
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">Samples from YT-SPEECH Dataset (Panoramic Videos)</h1>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">Anonymous Authors</span>
           </div>
+
+          <p class="hintline">🎧 Please wear headphones and drag the 360° video to experience spatial audio rotation.</p>
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ========================= OVERVIEW (single image) ========================= -->
-  <section class="hero is-small">
-    <div class="hero-body">
-      <div class="container is-max-desktop has-text-centered">
-        <h2 class="title is-3">Overview</h2>
-        <figure class="image" style="max-width: 980px; margin: 0 auto;">
-          <img src="framework.png" alt="Framework overview" style="border-radius: 12px; border: 1px solid #eee;">
-        </figure>
-        <p class="subtitle subtitle-tight" style="margin-top: 10px;">
-          Overview of the proposed Localizer–Renderer framework.
-        </p>
+<!-- =========================
+     ABSTRACT
+     ========================= -->
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>(Paste your abstract here.)</p>
+        </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ========================= GUIDELINES ========================= -->
-  <section class="hero is-small is-light">
-    <div class="hero-body">
-      <div class="container is-max-desktop has-text-centered">
-        <h3 class="title is-3">Guidelines for Listening Demo Videos</h3>
-        <ul class="is-size-5" style="display:inline-block; text-align:left; list-style: disc; padding-left: 1.5em;">
-          <li>Please use your headphones 🎧 for the best audio experience.</li>
-          <li>Feel free to rotate the video to assess the fidelity of the generated three-dimensional sound field.</li>
-          <li>Use <b>Play</b> to start/pause the spatial audio; <b>Rewind</b> to restart.</li>
-        </ul>
-      </div>
+<!-- =========================
+     OVERVIEW (single image)
+     Put your network/framework image as framework.png in repo root.
+     ========================= -->
+<section class="hero is-small">
+  <div class="hero-body">
+    <div class="container is-max-desktop has-text-centered">
+      <h2 class="title is-3">Overview</h2>
+      <figure class="image" style="max-width: 980px; margin: 0 auto;">
+        <img src="framework.png" alt="Framework overview" style="border-radius: 12px; border: 1px solid #eee;">
+      </figure>
+      <p class="subtitle" style="margin-top: 10px;">Overview of the proposed framework.</p>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ========================= COMPARISON ========================= -->
-  <section class="hero is-small">
-    <div class="hero-body">
-      <div class="container is-max-desktop">
-        <h3 class="title is-3 has-text-centered">Samples from YT-SPEECH Dataset (Panoramic Videos)</h3>
-
-        <div id="demo-root"></div>
-        <div id="errbox"></div>
-
-        <p class="has-text-centered" style="margin-top: 18px; color:#666;">
-          We would like to thank Omnitone for the 360° interactive spatial audio rendering.
-        </p>
-      </div>
+<!-- =========================
+     GUIDELINES
+     ========================= -->
+<section class="hero is-small is-light">
+  <div class="hero-body">
+    <div class="container is-max-desktop has-text-centered">
+      <h3 class="title is-3">Guidelines for Listening Demo Videos</h3>
+      <ul class="is-size-5" style="display:inline-block; text-align:left; list-style: disc; padding-left: 1.5em;">
+        <li>Please use your headphones 🎧 for the best audio experience.</li>
+        <li>Drag the 360° video to change the view direction (yaw rotation).</li>
+        <li>Use <b>Play</b> to start/pause the spatial audio; <b>Rewind</b> to restart.</li>
+      </ul>
     </div>
-  </section>
+  </div>
+</section>
+
+<!-- =========================
+     COMPARISON (Panoramic Videos)
+     ========================= -->
+<section class="hero is-small">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <h3 class="title is-3 has-text-centered">Comparison with Baselines (Panoramic Videos)</h3>
+
+      <div id="demo-root"></div>
+      <div id="errbox"></div>
+
+      <p class="has-text-centered" style="margin-top: 18px; color:#666;">
+        We would like to thank Omnitone for the 360° interactive spatial audio rendering.
+      </p>
+    </div>
+  </div>
+</section>
 
 <script>
 /* ============================================================
    EDIT SAMPLES HERE ONLY
+   - Add rows by adding another {name, cols:[...]} object.
+   - Each col has its own (video + FOA wav).
+   - You can reuse the same video for all cols (recommended).
    ============================================================ */
-const ROT_SIGN = -1;
+const VER = "v1";       // bump if caching annoys you (e.g., "v2")
+const ROT_SIGN = -1;    // flip to +1 if rotation direction feels reversed
 
 const SAMPLES = [
   {
     name: "Sample 1",
     cols: [
-      { title: "GT",         video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_gt.wav" },
-      { title: "Baseline",   video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_pred.wav" },
-      { title: "Baseline 2", video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_pred.wav" },
-      { title: "Ours",       video: "videos/Gb24E-LqZyE_31.webm", audio: "audios/Gb24E-LqZyE_31_pred.wav" },
+      { title: "GT",         video: "videos/Gb24E-LqZyE_31.webm?" + VER, audio: "audios/Gb24E-LqZyE_31_gt.wav?" + VER },
+      { title: "Baseline",   video: "videos/Gb24E-LqZyE_31.webm?" + VER, audio: "audios/Gb24E-LqZyE_31_baseline.wav?" + VER },
+      { title: "Baseline 2", video: "videos/Gb24E-LqZyE_31.webm?" + VER, audio: "audios/Gb24E-LqZyE_31_baseline2.wav?" + VER },
+      { title: "Ours",       video: "videos/Gb24E-LqZyE_31.webm?" + VER, audio: "audios/Gb24E-LqZyE_31_pred.wav?" + VER },
     ],
   },
 ];
@@ -284,46 +222,6 @@ async function resumeAudio(){
     await audioCtx.resume();
   }
 }
-// Ensure Omnitone is available (CDN fallback). Must be called after a user gesture.
-let _omnitonePromise = null;
-function ensureOmnitone(){
-  if (window.Omnitone) return Promise.resolve(window.Omnitone);
-  if (_omnitonePromise) return _omnitonePromise;
-
-  const candidates = [
-    "https://www.gstatic.com/external_hosted/omnitone/build/omnitone.min.js",
-    "https://cdn.jsdelivr.net/npm/omnitone@0.3.2/build/omnitone.min.js",
-    "https://unpkg.com/omnitone@0.3.2/build/omnitone.min.js",
-    "https://cdnjs.cloudflare.com/ajax/libs/omnitone/0.3.2/omnitone.min.js"
-  ];
-
-  _omnitonePromise = new Promise((resolve, reject) => {
-    let i = 0;
-    const tryNext = () => {
-      if (window.Omnitone) return resolve(window.Omnitone);
-      if (i >= candidates.length) return reject(new Error("Omnitone failed to load from all CDNs."));
-      const url = candidates[i++];
-      const s = document.createElement("script");
-      s.src = url;
-      s.async = true;
-      s.onload = () => window.Omnitone ? resolve(window.Omnitone) : tryNext();
-      s.onerror = tryNext;
-      document.head.appendChild(s);
-    };
-    tryNext();
-  }).catch(err => { _omnitonePromise = null; throw err; });
-
-  return _omnitonePromise;
-}
-
-
-async function decodeBuffer(url){
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Fetch failed ${res.status}: ${url}`);
-  const ab = await res.arrayBuffer();
-  await resumeAudio();
-  return await audioCtx.decodeAudioData(ab);
-}
 
 function yawToMat3_rowMajor(yaw){
   const c = Math.cos(yaw), s = Math.sin(yaw);
@@ -332,10 +230,17 @@ function yawToMat3_rowMajor(yaw){
            s, 0,  c ];
 }
 
-/* ========================= audio controller ========================= */
+/* ============================================================
+   FOA -> Omnitone controller (MediaElementSource; stable for you)
+   - No extra UI. Controlled only by overlay buttons.
+   ============================================================ */
 async function createFOAController(audioUrl, getCameraYawRad){
   await resumeAudio();
-  await ensureOmnitone();
+
+  if (!window.Omnitone){
+    throw new Error("Omnitone is not available (script failed to load).");
+  }
+
   const r = Omnitone.createFOARenderer(audioCtx);
   await r.initialize();
 
@@ -351,61 +256,60 @@ async function createFOAController(audioUrl, getCameraYawRad){
     else if (r._foaRotator && typeof r._foaRotator.setRotationMatrix3 === "function") r._foaRotator.setRotationMatrix3(m3);
   }
   (function tick(){ applyYaw(getCameraYawRad()); requestAnimationFrame(tick); })();
-  // ======= MediaElementSource version (stable in your working demo) =======
-    const audioEl = document.createElement("audio");
-    audioEl.crossOrigin = "anonymous";
-    audioEl.preload = "auto";
-    audioEl.src = audioUrl;
-    audioEl.loop = false;
-    audioEl.muted = false;              // <-- make sure NOT muted
-    audioEl.style.display = "none";
-    document.body.appendChild(audioEl);  // keep it alive
-  
-    const src = audioCtx.createMediaElementSource(audioEl);
-    src.connect(r.input);                // 4ch stream goes into Omnitone
-    // (r.output already goes to destination via gainOut above)
-  
-    let isPlaying = false;
-  
-    async function ensureLoaded(){
-      // Force the element to load metadata so duration/currentTime work reliably
-      if (audioEl.readyState >= 1) return;
-      await new Promise((resolve) => {
-        const onMeta = () => { audioEl.removeEventListener("loadedmetadata", onMeta); resolve(); };
-        audioEl.addEventListener("loadedmetadata", onMeta);
-        audioEl.load();
-      });
-    }
-  
-    async function playFrom(sec){
-      await resumeAudio();
-      await ensureLoaded();
-      audioEl.currentTime = Math.max(0, sec || 0);
-      await audioEl.play();
-      isPlaying = true;
-    }
-  
-    function pause(){
-      audioEl.pause();
-      isPlaying = false;
-      return audioEl.currentTime || 0;
-    }
-  
-    function stop(){
-      audioEl.pause();
-      audioEl.currentTime = 0;
-      isPlaying = false;
-    }
-  
-    return {
-      ensureLoaded,
-      isPlaying: () => isPlaying,
-      playFrom,
-      pause,
-      stop,
-      getOffset: () => (audioEl.currentTime || 0),
-    };
-  
+
+  // Hidden <audio> element
+  const audioEl = document.createElement("audio");
+  audioEl.crossOrigin = "anonymous";
+  audioEl.preload = "auto";
+  audioEl.src = audioUrl;
+  audioEl.loop = false;
+  audioEl.muted = false;
+  audioEl.style.display = "none";
+  document.body.appendChild(audioEl);
+
+  const src = audioCtx.createMediaElementSource(audioEl);
+  src.connect(r.input);
+
+  let isPlaying = false;
+
+  async function ensureLoaded(){
+    if (audioEl.readyState >= 1) return;
+    await new Promise((resolve) => {
+      const onMeta = () => { audioEl.removeEventListener("loadedmetadata", onMeta); resolve(); };
+      audioEl.addEventListener("loadedmetadata", onMeta);
+      audioEl.load();
+    });
+  }
+
+  async function playFrom(sec){
+    await resumeAudio();
+    await ensureLoaded();
+    audioEl.currentTime = Math.max(0, sec || 0);
+    await audioEl.play();
+    isPlaying = true;
+  }
+
+  function pause(){
+    audioEl.pause();
+    isPlaying = false;
+    return audioEl.currentTime || 0;
+  }
+
+  function stop(){
+    audioEl.pause();
+    audioEl.currentTime = 0;
+    isPlaying = false;
+  }
+
+  return {
+    ensureLoaded,
+    isPlaying: () => isPlaying,
+    playFrom,
+    pause,
+    stop,
+    getOffset: () => (audioEl.currentTime || 0),
+  };
+}
 
 /* ========================= build grid ========================= */
 function buildSampleRow(sample, sampleIdx){
@@ -453,32 +357,17 @@ function buildSampleRow(sample, sampleIdx){
     `;
 
     const v = viewer.querySelector("video");
-    v.muted = true;
+    v.muted = true; // avoid mixing any audio track from the webm
 
     const btnRew = viewer.querySelector('[data-role="rew"]');
     const btnPP  = viewer.querySelector('[data-role="pp"]');
     const sceneEl = viewer.querySelector("a-scene");
 
+    // camera yaw
     let camEl = null;
     function getCameraYawRad(){ return camEl ? camEl.object3D.rotation.y : 0; }
     sceneEl.addEventListener("loaded", () => {
       camEl = (sceneEl.camera && sceneEl.camera.el) ? sceneEl.camera.el : sceneEl.querySelector("a-camera");
-    });
-    // Force A-Frame canvas to stay BELOW overlay buttons (created after scene starts rendering)
-    sceneEl.addEventListener("renderstart", () => {
-      try{
-        const c = sceneEl.canvas;            // A-Frame canvas
-        if (c){
-          c.classList.add("a-canvas");       // ensure selector matches
-          c.style.position = "relative";
-          c.style.zIndex = "1";
-        }
-        const overlay = viewer.querySelector(".overlay-controls");
-        if (overlay){
-          overlay.style.zIndex = "99999";
-          overlay.style.pointerEvents = "auto";
-        }
-      }catch(e){}
     });
 
     async function playVideo(){
@@ -486,7 +375,7 @@ function buildSampleRow(sample, sampleIdx){
       await v.play();
     }
 
-    // Lazy init: only create AudioContext/Omnitone AFTER user clicks Play/Rewind
+    // Lazy controller: only create after user clicks (Chrome autoplay policy)
     let ctrlPromise = null;
     function getCtrl(){
       if (!ctrlPromise){
@@ -494,8 +383,7 @@ function buildSampleRow(sample, sampleIdx){
           try{
             return await createFOAController(col.audio, getCameraYawRad);
           }catch(e){
-            // allow retry if it failed
-            ctrlPromise = null;
+            ctrlPromise = null; // allow retry
             throw e;
           }
         })();
@@ -504,13 +392,11 @@ function buildSampleRow(sample, sampleIdx){
     }
 
     btnPP.addEventListener("pointerdown", async (e) => {
-      console.log("PLAY pressed");
-      e.preventDefault();
-      e.stopPropagation();
+      e.preventDefault(); e.stopPropagation();
       try{
         const ctrl = await getCtrl();
         await resumeAudio();
-    
+
         if (v.paused){
           const t = Math.max(0, v.currentTime || 0);
           await ctrl.playFrom(t);
@@ -526,8 +412,7 @@ function buildSampleRow(sample, sampleIdx){
     });
 
     btnRew.addEventListener("pointerdown", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
+      e.preventDefault(); e.stopPropagation();
       try{
         const ctrl = await getCtrl();
         await resumeAudio();
