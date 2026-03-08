@@ -43,7 +43,7 @@
     .viewer{
       position: relative;
       width: 100%;
-      max-width: 280px;   /* 这里按你第一部分现在满意的宽度微调 */
+      max-width: 320px;   /* 这里按你第一部分现在满意的宽度微调 */
       aspect-ratio: 2 / 1;
       margin: 0 auto;     /* 居中 */
       border-radius: var(--radius);
@@ -83,10 +83,20 @@
     
     .sample-label,
     .sample-title-wrap{
-      max-width: 460px;
+      max-width: 320px;
       margin-left: auto;
       margin-right: auto;
     }
+    
+    .demo-row {
+      margin-left: -8px;
+      margin-right: -8px;
+    }
+    .demo-row > .column {
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+    
     #errbox{
       display:none;
       margin-top: 12px;
@@ -340,7 +350,7 @@ async function createFOAController(audioUrl, getCameraYawRad){
 /* ========================= build grid ========================= */
 function buildSampleRow(sample, sampleIdx){
   const row = document.createElement("div");
-  row.className = "columns is-multiline is-centered";
+  row.className = "columns is-multiline is-centered demo-row";
 
   const nCols = sample.cols.length;
   const bulmaWidth = nCols === 2 ? "is-half" : "is-one-third";
