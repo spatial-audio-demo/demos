@@ -29,7 +29,7 @@
        ============================================================ */
     :root{
       --maxw: 1180px;        /* page max width */
-      --viewerH: 260px;      /* height of each 360 viewer */
+      --viewerH: auto;      /* height of each 360 viewer 260px*/
       --radius: 14px;        /* rounded corners */
       --btnPadY: 8px;        /* overlay button padding */
     }
@@ -43,7 +43,7 @@
     .viewer{
       position: relative;
       width: 100%;
-      height: var(--viewerH);
+      aspect-ratio: 2 / 1;
       border-radius: var(--radius);
       overflow: hidden;
       background: #000;
@@ -171,13 +171,18 @@
   <div class="hero-body">
     <div class="container is-max-desktop">
       <h3 class="title is-3 has-text-centered">Samples from YT-SPEECH Dataset</h3>
+      <div id="demo-root-yt"></div>
 
-      <div id="demo-root"></div>
-      <div id="errbox"></div>
-
-      <p class="has-text-centered" style="margin-top: 18px; color:#666;">
-        We would like to thank Omnitone for the 360° interactive spatial audio rendering.
+      <h3 class="title is-3 has-text-centered" style="margin-top: 36px;">Mono Recordings</h3>
+      <p class="has-text-centered" style="margin-top:-8px; margin-bottom:18px; color:#666;">
+        Generalization to real mono recordings with unknown FOA.
       </p>
+      <div id="demo-root-mono"></div>
+
+      <div id="errbox"></div>
+      <!--<p class="has-text-centered" style="margin-top: 18px; color:#666;">
+        We would like to thank Omnitone for the 360° interactive spatial audio rendering.
+      </p>-->
     </div>
   </div>
 </section>
@@ -192,17 +197,32 @@
 const VER = "v1";       // bump if caching annoys you (e.g., "v2")
 const ROT_SIGN = -1;    // flip to +1 if rotation direction feels reversed
 
-const SAMPLES = [
+const YT_SPEECH_SAMPLES = [
   {
     name: "Sample 1",
     cols: [
       { title: "Input",         video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_W.wav?" + VER },
       { title: "GT",   video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_gt.wav?" + VER },
-      // { title: "Baseline 2", video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/Gb24E-LqZyE_31_pred.wav?" + VER },
       { title: "Ours",       video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_pred.wav?" + VER },
     ],
   },
+  // 再补 3 个 sample，一共 4 行
+
 ];
+
+
+const MONO_SAMPLES = [
+  {
+    name: "Mono 1",
+    cols: [
+      { title: "Input", video: "videos/mono_01.webm?" + VER, audio: "audios/mono_01_input.wav?" + VER },
+      { title: "Ours",  video: "videos/mono_01.webm?" + VER, audio: "audios/mono_01_pred.wav?" + VER },
+    ],
+  },
+
+  // 再补 2 个 sample，一共 3 行
+];
+
 
 /* ========================= helpers ========================= */
 function showErr(e){
@@ -314,9 +334,12 @@ function buildSampleRow(sample, sampleIdx){
   const row = document.createElement("div");
   row.className = "columns is-multiline is-centered";
 
+  const nCols = sample.cols.length;
+  const bulmaWidth = nCols === 2 ? "is-half" : "is-one-third";
+
   sample.cols.forEach((col, colIdx) => {
     const colDiv = document.createElement("div");
-    colDiv.className = "column is-one-quarter has-text-centered";
+    colDiv.className = `column ${bulmaWidth} has-text-centered`;
 
     const h4 = document.createElement("h4");
     h4.className = "title is-4";
@@ -401,7 +424,7 @@ function buildSampleRow(sample, sampleIdx){
           await playVideo();
           viewer.__isPlaying = true;
           viewer.__isPlaying = true;
-        btnPP.textContent = "Pause";
+          btnPP.textContent = "Pause";
         } else {
           const t = ctrl.pause();
           v.pause();
@@ -448,9 +471,13 @@ function buildSampleRow(sample, sampleIdx){
 
 document.addEventListener("DOMContentLoaded", () => {
   try{
-    const root = document.getElementById("demo-root");
-    root.innerHTML = "";
-    SAMPLES.forEach((s, i) => root.appendChild(buildSampleRow(s, i)));
+    const rootYT = document.getElementById("demo-root-yt");
+    const rootMono = document.getElementById("demo-root-mono");
+    rootYT.innerHTML = "";
+    rootMono.innerHTML = "";
+
+    YT_SPEECH_SAMPLES.forEach((s, i) => rootYT.appendChild(buildSampleRow(s, `yt-${i}`)));
+    MONO_SAMPLES.forEach((s, i) => rootMono.appendChild(buildSampleRow(s, `mono-${i}`)));
   } catch(e){ showErr(e); }
 });
 </script>
