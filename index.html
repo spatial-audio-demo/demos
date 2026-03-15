@@ -299,7 +299,7 @@ const MONO_SAMPLES = [
     name: "Mono 10",
     cols: [
       { title: "Input", video: "videos/v8_c4_4.mp4?" + VER, audio: "audios/v8_c4_4_mono.wav?" + VER },
-      { title: "Ours",  video: "videos/v8_c4_4.mp4?" + VER, audio: "audios/v8_c4_6_boosted_2x.wav?" + VER },
+      { title: "Ours",  video: "videos/v8_c4_4.mp4?" + VER, audio: "audios/v8_c4_4_boosted_2x.wav?" + VER },
     ],
   },
   {
@@ -367,7 +367,7 @@ async function createFOAController(audioUrl, getCameraYawRad){
   // Hidden <audio> element
   const audioEl = document.createElement("audio");
   audioEl.crossOrigin = "anonymous";
-  audioEl.preload = "auto";
+  audioEl.preload = "metadata";
   audioEl.src = audioUrl;
   audioEl.loop = false;
   audioEl.muted = false;
@@ -454,7 +454,7 @@ function buildSampleRow(sample, sampleIdx){
           <video id="${vidId}" src="${col.video}"
                  crossorigin="anonymous"
                  playsinline webkit-playsinline
-                 preload="auto"></video>
+                 preload="metadata"></video>
         </a-assets>
         <a-videosphere src="#${vidId}" rotation="0 -90 0"></a-videosphere>
         <a-camera look-controls="enabled:true"></a-camera>
@@ -565,7 +565,7 @@ document.addEventListener("DOMContentLoaded", () => {
     rootMono.innerHTML = "";
 
     YT_SPEECH_SAMPLES.forEach((s, i) => rootYT.appendChild(buildSampleRow(s, `yt-${i}`)));
-    MONO_SAMPLES.forEach((s, i) => rootMono.appendChild(buildSampleRow(s, `mono-${i}`)));
+    MONO_SAMPLES.forEach((0, 3) => rootMono.appendChild(buildSampleRow(s, `mono-${i}`)));
   } catch(e){ showErr(e); }
 });
 </script>
