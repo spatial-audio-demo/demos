@@ -565,7 +565,7 @@ document.addEventListener("DOMContentLoaded", () => {
     rootMono.innerHTML = "";
 
     YT_SPEECH_SAMPLES.forEach((s, i) => rootYT.appendChild(buildSampleRow(s, `yt-${i}`)));
-    MONO_SAMPLES.slice(0, 3).forEach((s, i) => {
+    MONO_SAMPLES.forEach((s, i) => {
       rootMono.appendChild(buildSampleRow(s, `mono-${i}`));
     });
   } catch(e){ showErr(e); }
