@@ -1,1 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Demo Player</title>
 
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://www.gstatic.com/external_hosted/omnitone/build/omnitone.min.js"></script>
+
+  <style>
+    html, body{
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    #viewer{
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+      border-radius: 14px;
+    }
+
+    #viewer a-scene{
+      width: 100%;
+      height: 100%;
+    }
+
+    #viewer .a-canvas{
+      position: relative !important;
+      z-index: 1 !important;
+    }
+
+    .overlay-controls{
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      display: flex;
+      gap: 10px;
+      z-index: 2147483647;
+      pointer-events: none;
+    }
+
+    .ovbtn{
+      pointer-events: auto;
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      border: 2px solid rgba(255,255,255,0.78);
+      border-radius: 12px;
+      padding: 8px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      user-select: none;
+      backdrop-filter: blur(2px);
+      font-size: 15px;
+    }
+
+    .ovbtn:active{
+      transform: translateY(1px);
+    }
+
+    .fs-btn{
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      z-index: 2147483647;
+      width: 44px;
+      height: 34px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.55);
+      border: 2px solid rgba(255,255,255,0.78);
+      color: #fff;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    #loading{
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: #000;
+      font-size: 14px;
+      letter-spacing: 0.2px;
+    }
+
+    #errbox{
+      display:none;
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      top: 10px;
+      z-index: 999999;
+      background:#ffecec;
+      border:1px solid #ffb3b3;
+      color:#7a0000;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      white-space: pre-wrap;
+      max-height: 45%;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+
+<div id="viewer">
+  <div id="loading">Loading viewer...</div>
+
+  <div class="overlay-controls">
+    <div id="btn-rew" class="ovbtn">Rewind</div>
+    <div id="btn-pp" class="ovbtn">Play</div>
+  </div>
+
+  <button id="btn-fs" class="fs-btn" title="Fullscreen" aria-label="Fullscreen">⛶</button>
+
+  <div id="errbox"></div>
+</div>
+
+<script>
+const ROT_SIGN = -1;
+
+function showErr(e){
+  console.error(e);
+  const box = document.getElementById("errbox");
+  box.style.display = "block";
+  box.textContent = (e && e.stack) ? e.stack : String(e);
+}
+
+function yawToMat3_rowMajor(yaw){
+  const c = Math.cos(yaw), s = Math.sin(yaw);
+  return [ c, 0, -s,
+           0, 1,  0,
+           s, 0,  c ];
+}
+
+function getParams(){
+  const p = new URLSearchParams(window.location.search);
+  return {
+    video: p.get("video") || "",
+    audio: p.get("audio") || "",
+    label: p.get("label") || ""
+  };
+}
+
+async function createFOAController(audioUrl, getCameraYawRad){
+  if (!window.Omnitone){
+    throw new Error("Omnitone is not available.");
+  }
+
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const r = Omnitone.createFOARenderer(ctx);
+  await r.initialize();
+
+  const gainOut = ctx.createGain();
+  gainOut.gain.value = 2.8;
+  r.output.connect(gainOut);
+  gainOut.connect(ctx.destination);
+
+  function applyYaw(yawRad){
+    const m3 = yawToMat3_rowMajor(ROT_SIGN * yawRad);
+    if (typeof r.setRotationMatrix3 === "function") r.setRotationMatrix3(m3);
+    else if (typeof r.setRotationMatrix === "function") r.setRotationMatrix(m3);
+    else if (r._foaRotator && typeof r._foaRotator.setRotationMatrix3 === "function") {
+      r._foaRotator.setRotationMatrix3(m3);
+    }
+  }
+
+  let rafId = null;
+  function tick(){
+    applyYaw(getCameraYawRad());
+    rafId = requestAnimationFrame(tick);
+  }
+  tick();
+
+  const audioEl = document.createElement("audio");
+  audioEl.crossOrigin = "anonymous";
+  audioEl.preload = "metadata";
+  audioEl.src = audioUrl;
+  audioEl.loop = false;
+  audioEl.muted = false;
+  audioEl.volume = 1.0;
+  audioEl.style.display = "none";
+  document.body.appendChild(audioEl);
+
+  const src = ctx.createMediaElementSource(audioEl);
+  src.connect(r.input);
+
+  async function ensureRunning(){
+    if (ctx.state !== "running") await ctx.resume();
+  }
+
+  async function ensureMetadata(){
+    if (audioEl.readyState >= 1) return;
+    await new Promise((resolve) => {
+      const onMeta = () => {
+        audioEl.removeEventListener("loadedmetadata", onMeta);
+        resolve();
+      };
+      audioEl.addEventListener("loadedmetadata", onMeta);
+      audioEl.load();
+    });
+  }
+
+  async function playFrom(sec){
+    await ensureRunning();
+    await ensureMetadata();
+    audioEl.currentTime = Math.max(0, sec || 0);
+    await audioEl.play();
+  }
+
+  function pause(){
+    audioEl.pause();
+    return audioEl.currentTime || 0;
+  }
+
+  function stop(){
+    audioEl.pause();
+    audioEl.currentTime = 0;
+  }
+
+  function destroy(){
+    try { if (rafId) cancelAnimationFrame(rafId); } catch(e){}
+    try { audioEl.pause(); } catch(e){}
+    try { audioEl.remove(); } catch(e){}
+    try { src.disconnect(); } catch(e){}
+    try { gainOut.disconnect(); } catch(e){}
+    try { r.output.disconnect(); } catch(e){}
+    try { ctx.close(); } catch(e){}
+  }
+
+  return { playFrom, pause, stop, destroy };
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+  try{
+    const { video, audio } = getParams();
+    if (!video || !audio){
+      throw new Error("Missing video or audio parameter.");
+    }
+
+    const viewer = document.getElementById("viewer");
+    const loading = document.getElementById("loading");
+    const btnRew = document.getElementById("btn-rew");
+    const btnPP = document.getElementById("btn-pp");
+    const btnFS = document.getElementById("btn-fs");
+
+    const vidId = "player-video";
+    const wrap = document.createElement("div");
+    wrap.innerHTML = `
+      <a-scene embedded vr-mode-ui="enabled:true">
+        <a-assets>
+          <video id="${vidId}" src="${video}"
+                 crossorigin="anonymous"
+                 playsinline webkit-playsinline
+                 preload="metadata"></video>
+        </a-assets>
+        <a-videosphere src="#${vidId}" rotation="0 -90 0"></a-videosphere>
+        <a-camera look-controls="enabled:true"></a-camera>
+      </a-scene>
+    `;
+    const sceneEl = wrap.firstElementChild;
+    viewer.prepend(sceneEl);
+
+    await new Promise((resolve, reject) => {
+      sceneEl.addEventListener("loaded", resolve, { once: true });
+      sceneEl.addEventListener("error", reject, { once: true });
+    });
+
+    const v = sceneEl.querySelector("video");
+    const camEl = (sceneEl.camera && sceneEl.camera.el)
+      ? sceneEl.camera.el
+      : sceneEl.querySelector("a-camera");
+
+    if (!v) throw new Error("Video element creation failed.");
+    v.muted = true;
+    v.loop = false;
+
+    function getCameraYawRad(){
+      return camEl ? camEl.object3D.rotation.y : 0;
+    }
+
+    const ctrl = await createFOAController(audio, getCameraYawRad);
+    let isPlaying = false;
+
+    async function playVideo(){
+      await v.play();
+    }
+
+    v.addEventListener("ended", () => {
+      isPlaying = false;
+      btnPP.textContent = "Play";
+      try { ctrl.stop(); } catch(e){}
+    });
+
+    v.addEventListener("pause", () => {
+      if (isPlaying){
+        isPlaying = false;
+        btnPP.textContent = "Play";
+        try { ctrl.pause(); } catch(e){}
+      }
+    });
+
+    btnPP.addEventListener("pointerdown", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      try{
+        if (!isPlaying){
+          const t = Math.max(0, v.currentTime || 0);
+          await ctrl.playFrom(t);
+          await playVideo();
+          isPlaying = true;
+          btnPP.textContent = "Pause";
+        } else {
+          const t = ctrl.pause();
+          v.pause();
+          if (typeof t === "number" && isFinite(t)) v.currentTime = t;
+          isPlaying = false;
+          btnPP.textContent = "Play";
+        }
+      } catch(err){
+        showErr(err);
+      }
+    });
+
+    btnRew.addEventListener("pointerdown", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      try{
+        v.currentTime = 0;
+        await ctrl.playFrom(0);
+        await playVideo();
+        isPlaying = true;
+        btnPP.textContent = "Pause";
+      } catch(err){
+        showErr(err);
+      }
+    });
+
+    btnFS.addEventListener("click", async () => {
+      try{
+        if (!document.fullscreenElement){
+          await viewer.requestFullscreen();
+        } else {
+          await document.exitFullscreen();
+        }
+      } catch(err){
+        showErr(err);
+      }
+    });
+
+    loading.style.display = "none";
+
+    window.addEventListener("beforeunload", () => {
+      try { ctrl.destroy(); } catch(e){}
+    });
+
+  } catch(e){
+    showErr(e);
+    const loading = document.getElementById("loading");
+    if (loading) loading.textContent = "Failed to load viewer.";
+  }
+});
+</script>
+
+</body>
+</html>
