@@ -44,7 +44,7 @@
     .viewer{
       position: relative;
       width: 100%;
-      max-width: 340px;   /* 这里按你第一部分现在满意的宽度微调 */
+      max-width: 360px;   /* 这里按你第一部分现在满意的宽度微调 */
       aspect-ratio: 2 / 1;
       margin: 0 auto;     /* 居中 */
       border-radius: var(--radius);
@@ -217,88 +217,63 @@ const VER = "v1";       // bump if caching annoys you (e.g., "v2")
 const ROT_SIGN = -1;    // flip to +1 if rotation direction feels reversed
 
 const YT_SPEECH_SAMPLES = [
-  // {
-  //   name: "Samples_1",
-  //   cols: [
-  //     { title: "Input",         video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_W.wav?" + VER },
-  //     { title: "GT",          video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_gt.wav?" + VER },
-  //     { title: "Ours",       video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_pred.wav?" + VER },
-  //   ],
-  // },
-  // {
-  //   name: "Samples_2",
-  //   cols: [
-  //     { title: "Input",         video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_W.wav?" + VER },
-  //     { title: "GT",          video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_gt.wav?" + VER },
-  //     { title: "Ours",       video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_pred.wav?" + VER },
-  //   ],
-  // },
+  {
+    name: "Samples_1",
+    cols: [
+      { title: "Input",         video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_W.wav?" + VER },
+      { title: "GT",          video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_gt.wav?" + VER },
+      { title: "Ours",       video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_pred.wav?" + VER },
+    ],
+  },
+  {
+    name: "Samples_2",
+    cols: [
+      { title: "Input",         video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_W.wav?" + VER },
+      { title: "GT",          video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_gt.wav?" + VER },
+      { title: "Ours",       video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_pred.wav?" + VER },
+    ],
+  },
    {
     name: "Samples_3",
     cols: [
-      { title: "Input",         video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/.wav?" + VER },
-      { title: "GT",          video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_gt.wav?" + VER },
-      { title: "Ours",       video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_pred.wav?" + VER },
-    ],
-  },
-   {
-    name: "Samples_4",
-    cols: [
-      { title: "Input",         video: "videos/EWloUqaltoI_87.webm?" + VER, audio: "audios/.wav?" + VER },
-      { title: "GT",          video: "videos/EWloUqaltoI_87.webm?" + VER, audio: "audios/EWloUqaltoI_87_gt.wav?" + VER },
-      { title: "Ours",       video: "videos/EWloUqaltoI_87.webm?" + VER, audio: "audios/EWloUqaltoI_87_pred.wav?" + VER },
-    ],
-  },
-   {
-    name: "Samples_5",
-    cols: [
-      { title: "Input",         video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/.wav?" + VER },
+      { title: "Input",         video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_W.wav?" + VER },
       { title: "GT",          video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_gt.wav?" + VER },
       { title: "Ours",       video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_pred.wav?" + VER },
     ],
   },
-   {
-    name: "Samples_6",
+  {
+    name: "Samples_4",
     cols: [
-      { title: "Input",         video: "videos/BaRbp5K4iAk_100.webm?" + VER, audio: "audios/.wav?" + VER },
-      { title: "GT",          video: "videos/BaRbp5K4iAk_100.webm?" + VER, audio: "audios/BaRbp5K4iAk_100_gt.wav?" + VER },
-      { title: "Ours",       video: "videos/BaRbp5K4iAk_100.webm?" + VER, audio: "audios/BaRbp5K4iAk_100_pred.wav?" + VER },
-    ],
-  },
-   {
-    name: "Samples_7",
-    cols: [
-      { title: "Input",         video: "videos/9_ihTRnyauI_59.webm?" + VER, audio: "audios/.wav?" + VER },
-      { title: "GT",          video: "videos/9_ihTRnyauI_59.webm?" + VER, audio: "audios/9_ihTRnyauI_59_gt.wav?" + VER },
-      { title: "Ours",       video: "videos/9_ihTRnyauI_59.webm?" + VER, audio: "audios/9_ihTRnyauI_59_pred.wav?" + VER },
+      { title: "Input",         video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_W.wav?" + VER },
+      { title: "GT",          video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_gt.wav?" + VER },
+      { title: "Ours",       video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_pred.wav?" + VER },
     ],
   }
-
 ];
 
 
 const MONO_SAMPLES = [
-  // {
-  //   name: "Mono 1",
-  //   cols: [
-  //     { title: "Input", video: "videos/v15.mp4?" + VER, audio: "audios/v15_mono.wav?" + VER },
-  //     { title: "Ours",  video: "videos/v15.mp4?" + VER, audio: "audios/v15_c2_15_pred_0_10_boosted_strong.wav?" + VER },
-  //   ],
-  // },
-  // {
-  //   name: "Mono 2",
-  //   cols: [
-  //     { title: "Input", video: "videos/v6.mp4?" + VER, audio: "audios/v6_mono.wav?" + VER },
-  //     { title: "Ours",  video: "videos/v6.mp4?" + VER, audio: "audios/v6_c3_1_pred_0_10_boosted_strong.wav?" + VER },
-  //   ],
-  // },
-  // {
-  //   name: "Mono 3",
-  //   cols: [
-  //     { title: "Input", video: "videos/v5.mp4?" + VER, audio: "audios/v5_mono.wav?" + VER },
-  //     { title: "Ours",  video: "videos/v5.mp4?" + VER, audio: "audios/v5_c4_4_pred_0_10_boosted_strong.wav?" + VER },
-  //   ],
-  // }
+  {
+    name: "Mono 1",
+    cols: [
+      { title: "Input", video: "videos/v15.mp4?" + VER, audio: "audios/v15_mono.wav?" + VER },
+      { title: "Ours",  video: "videos/v15.mp4?" + VER, audio: "audios/v15_c2_15_pred_0_10_boosted_strong.wav?" + VER },
+    ],
+  },
+  {
+    name: "Mono 2",
+    cols: [
+      { title: "Input", video: "videos/v6.mp4?" + VER, audio: "audios/v6_mono.wav?" + VER },
+      { title: "Ours",  video: "videos/v6.mp4?" + VER, audio: "audios/v6_c3_1_pred_0_10_boosted_strong.wav?" + VER },
+    ],
+  },
+  {
+    name: "Mono 3",
+    cols: [
+      { title: "Input", video: "videos/v5.mp4?" + VER, audio: "audios/v5_mono.wav?" + VER },
+      { title: "Ours",  video: "videos/v5.mp4?" + VER, audio: "audios/v5_c4_4_pred_0_10_boosted_strong.wav?" + VER },
+    ],
+  }
 //   {
 //     name: "Mono 4",
 //     cols: [
