@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Visually-Guided Spatial Audio Generation for 360° In-the-Wild Speech Scenes</title>
-  
 
   <!-- =======================
        STYLE: ViSAGe-like template (Bulma + Google Sans)
@@ -19,20 +18,17 @@
   <!-- =======================
        360 viewer + Omnitone
        - A-Frame is used for draggable 360 video
-       - Omnitone is loaded from gstatic (works in your network)
+       - Omnitone is loaded from gstatic
        ======================= -->
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://www.gstatic.com/external_hosted/omnitone/build/omnitone.min.js"></script>
 
   <style>
-    /* ============================================================
-       EDIT KNOBS HERE (only touch these if you want to resize)
-       ============================================================ */
     :root{
-      --maxw: 1180px;        /* page max width */
-      --viewerH: auto;      /* height of each 360 viewer 260px*/
-      --radius: 14px;        /* rounded corners */
-      --btnPadY: 8px;        /* overlay button padding */
+      --maxw: 1180px;
+      --viewerH: auto;
+      --radius: 14px;
+      --btnPadY: 8px;
     }
 
     body{
@@ -40,23 +36,28 @@
     }
     .container.is-max-desktop{ max-width: var(--maxw) !important; }
 
-    /* viewer box */
     .viewer{
       position: relative;
       width: 100%;
-      max-width: 420px;   /* 这里按你第一部分现在满意的宽度微调 */
+      max-width: 420px;
       aspect-ratio: 2 / 1;
-      margin: 0 auto;     /* 居中 */
+      margin: 0 auto;
       border-radius: var(--radius);
       overflow: hidden;
       background: #000;
-      isolation: isolate; /* make z-index deterministic */
+      isolation: isolate;
       box-shadow: 0 1px 0 rgba(0,0,0,0.04);
     }
-    .viewer a-scene{ width:100%; height:100%; }
+    .viewer a-scene{
+      width:100%;
+      height:100%;
+    }
 
-    /* ensure overlay buttons clickable above A-Frame canvas */
-    .viewer .a-canvas{ position: relative !important; z-index: 1 !important; }
+    .viewer .a-canvas{
+      position: relative !important;
+      z-index: 1 !important;
+    }
+
     .overlay-controls{
       position: absolute;
       left: 12px;
@@ -64,7 +65,7 @@
       display: flex;
       gap: 10px;
       z-index: 2147483647;
-      pointer-events: none; /* only buttons accept clicks */
+      pointer-events: none;
     }
     .ovbtn{
       pointer-events: auto;
@@ -80,15 +81,18 @@
     }
     .ovbtn:active{ transform: translateY(1px); }
 
-    .hintline{ margin-top: 10px; font-weight: 600; }
-    
+    .hintline{
+      margin-top: 10px;
+      font-weight: 600;
+    }
+
     .sample-label,
     .sample-title-wrap{
       max-width: 320px;
       margin-left: auto;
       margin-right: auto;
     }
-    
+
     .demo-row {
       margin-left: -6px;
       margin-right: -6px;
@@ -97,7 +101,7 @@
       padding-left: 6px;
       padding-right: 6px;
     }
-    
+
     #errbox{
       display:none;
       margin-top: 12px;
@@ -114,30 +118,21 @@
 
 <body>
 
-<!-- =========================
-     HERO
-     ========================= -->
 <section class="hero">
   <div class="hero-body">
     <div class="container is-max-desktop">
       <div class="columns is-centered">
         <div class="column has-text-centered">
           <h1 class="title is-1 publication-title">Visually-Guided Spatial Audio Generation for 360° In-the-Wild Speech Scenes</h1>
-
           <div class="is-size-5 publication-authors">
             <span class="author-block">Anonymous submission to Interspeech 2026</span>
           </div>
-
-          <!-- <p class="hintline">🎧 Please wear headphones and drag the 360° video to experience spatial audio rotation.</p> -->
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- =========================
-     ABSTRACT
-     ========================= -->
 <section class="section hero is-light">
   <div class="container is-max-desktop">
     <div class="columns is-centered has-text-centered">
@@ -151,10 +146,6 @@
   </div>
 </section>
 
-<!-- =========================
-     OVERVIEW (single image)
-     Put your network/framework image as framework.png in repo root.
-     ========================= -->
 <section class="hero is-small">
   <div class="hero-body">
     <div class="container is-max-desktop has-text-centered">
@@ -167,9 +158,6 @@
   </div>
 </section>
 
-<!-- =========================
-     GUIDELINES
-     ========================= -->
 <section class="hero is-small is-light">
   <div class="hero-body">
     <div class="container is-max-desktop has-text-centered">
@@ -183,9 +171,6 @@
   </div>
 </section>
 
-<!-- =========================
-     COMPARISON (Panoramic Videos)
-     ========================= -->
 <section class="hero is-small">
   <div class="hero-body">
     <div class="container is-max-desktop">
@@ -199,58 +184,48 @@
       <div id="demo-root-mono"></div>
 
       <div id="errbox"></div>
-      <!--<p class="has-text-centered" style="margin-top: 18px; color:#666;">
-        We would like to thank Omnitone for the 360° interactive spatial audio rendering.
-      </p>-->
     </div>
   </div>
 </section>
 
 <script>
-/* ============================================================
-   EDIT SAMPLES HERE ONLY
-   - Add rows by adding another {name, cols:[...]} object.
-   - Each col has its own (video + FOA wav).
-   - You can reuse the same video for all cols (recommended).
-   ============================================================ */
-const VER = "v1";       // bump if caching annoys you (e.g., "v2")
-const ROT_SIGN = -1;    // flip to +1 if rotation direction feels reversed
+const VER = "v1";
+const ROT_SIGN = -1;
 
 const YT_SPEECH_SAMPLES = [
   {
     name: "Samples_1",
     cols: [
-      { title: "Input",         video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_W.wav?" + VER },
-      { title: "GT",          video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_gt.wav?" + VER },
-      { title: "Ours",       video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_pred.wav?" + VER },
+      { title: "Input", video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_W.wav?" + VER },
+      { title: "GT",    video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_gt.wav?" + VER },
+      { title: "Ours",  video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_pred.wav?" + VER },
     ],
   },
   {
     name: "Samples_2",
     cols: [
-      { title: "Input",         video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_W.wav?" + VER },
-      { title: "GT",          video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_gt.wav?" + VER },
-      { title: "Ours",       video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_pred.wav?" + VER },
+      { title: "Input", video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_W.wav?" + VER },
+      { title: "GT",    video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_gt.wav?" + VER },
+      { title: "Ours",  video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_pred.wav?" + VER },
     ],
   },
-   {
+  {
     name: "Samples_3",
     cols: [
-      { title: "Input",         video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_W.wav?" + VER },
-      { title: "GT",          video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_gt.wav?" + VER },
-      { title: "Ours",       video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_pred.wav?" + VER },
+      { title: "Input", video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_W.wav?" + VER },
+      { title: "GT",    video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_gt.wav?" + VER },
+      { title: "Ours",  video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_pred.wav?" + VER },
     ],
   },
   {
     name: "Samples_4",
     cols: [
-      { title: "Input",         video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_W.wav?" + VER },
-      { title: "GT",          video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_gt.wav?" + VER },
-      { title: "Ours",       video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_pred.wav?" + VER },
+      { title: "Input", video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_W.wav?" + VER },
+      { title: "GT",    video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_gt.wav?" + VER },
+      { title: "Ours",  video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_pred.wav?" + VER },
     ],
   }
 ];
-
 
 const MONO_SAMPLES = [
   {
@@ -274,59 +249,8 @@ const MONO_SAMPLES = [
       { title: "Ours",  video: "videos/v5.mp4?" + VER, audio: "audios/v5_c4_4_pred_0_10_boosted_strong.wav?" + VER },
     ],
   }
-//   {
-//     name: "Mono 4",
-//     cols: [
-//       { title: "Input", video: "videos/v4.mp4?" + VER, audio: "audios/v4_mono.wav?" + VER },
-//       { title: "Ours",  video: "videos/v4.mp4?" + VER, audio: "audios/v4_c1_1_pred_0_10_boosted_strong.wav?" + VER },
-//     ],
-//   },
-//   {
-//     name: "Mono 5",
-//     cols: [
-//       { title: "Input", video: "videos/v2.mp4?" + VER, audio: "audios/v2_mono.wav?" + VER },
-//       { title: "Ours",  video: "videos/v2.mp4?" + VER, audio: "audios/v2_c1_3_pred_0_10_boosted_strong.wav?" + VER },
-//     ],
-//   },
-//   {
-//     name: "Mono 6",
-//     cols: [
-//       { title: "Input", video: "videos/v13.mp4?" + VER, audio: "audios/v13_mono.wav?" + VER },
-//       { title: "Ours",  video: "videos/v13.mp4?" + VER, audio: "audios/v13_c2_1_pred_0_10_boosted_strong.wav?" + VER },
-//     ],
-//   },
-// {
-//     name: "Mono 8",
-//     cols: [
-//       { title: "Input", video: "videos/v8_c9_5.mp4?" + VER, audio: "audios/v8_c9_5_mono.wav?" + VER },
-//       { title: "Ours",  video: "videos/v8_c9_5.mp4?" + VER, audio: "audios/v8_c9_5_pred_0_10_boosted_strong.wav?" + VER },
-//     ],
-//   },
-//   {
-//     name: "Mono 9",
-//     cols: [
-//       { title: "Input", video: "videos/v8_c9_2.mp4?" + VER, audio: "audios/v8_c9_2_mono.wav?" + VER },
-//       { title: "Ours",  video: "videos/v8_c9_2.mp4?" + VER, audio: "audios/v8_c9_2_pred_0_10_boosted_strong.wav?" + VER },
-//     ],
-//   },
-//   {
-//     name: "Mono 10",
-//     cols: [
-//       { title: "Input", video: "videos/v8_c4_4.mp4?" + VER, audio: "audios/v8_c4_4_mono.wav?" + VER },
-//       { title: "Ours",  video: "videos/v8_c4_4.mp4?" + VER, audio: "audios/v8_c4_4_pred_0_10_boosted_strong.wav?" + VER },
-//     ],
-//   },
-//   {
-//     name: "Mono 11",
-//     cols: [
-//       { title: "Input", video: "videos/v8_c4_6.mp4?" + VER, audio: "audios/v8_c4_6_mono.wav?" + VER },
-//       { title: "Ours",  video: "videos/v8_c4_6.mp4?" + VER, audio: "audios/v8_c4_6_pred_0_10_boosted_strong.wav?" + VER },
-//     ],
-//   }
 ];
 
-
-/* ========================= helpers ========================= */
 function showErr(e){
   console.error(e);
   const box = document.getElementById("errbox");
@@ -341,44 +265,33 @@ function yawToMat3_rowMajor(yaw){
            s, 0,  c ];
 }
 
-/* ============================================================
-   FOA -> Omnitone controller (WORKING version)
-   Key choices (match your previously-working demo):
-   - One AudioContext per column (most reliable across browsers)
-   - HTMLAudioElement + createMediaElementSource (no fetch/decode)
-   - Omnitone loaded from gstatic
-   ============================================================ */
 async function createFOAController(audioUrl, getCameraYawRad){
   if (!window.Omnitone){
     throw new Error("Omnitone is not available (script failed to load).");
   }
 
-  // IMPORTANT: per-column AudioContext (do NOT force sampleRate)
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
 
-  // Omnitone renderer
   const r = Omnitone.createFOARenderer(ctx);
   await r.initialize();
 
-  // Output gain
   const gainOut = ctx.createGain();
   gainOut.gain.value = 2.8;
   r.output.connect(gainOut);
   gainOut.connect(ctx.destination);
 
-  // Rotation update
   function applyYaw(yawRad){
     const m3 = yawToMat3_rowMajor(ROT_SIGN * yawRad);
     if (typeof r.setRotationMatrix3 === "function") r.setRotationMatrix3(m3);
     else if (typeof r.setRotationMatrix === "function") r.setRotationMatrix(m3);
     else if (r._foaRotator && typeof r._foaRotator.setRotationMatrix3 === "function") r._foaRotator.setRotationMatrix3(m3);
   }
+
   (function tick(){
     applyYaw(getCameraYawRad());
     requestAnimationFrame(tick);
   })();
 
-  // Hidden <audio> element
   const audioEl = document.createElement("audio");
   audioEl.crossOrigin = "anonymous";
   audioEl.preload = "metadata";
@@ -389,7 +302,6 @@ async function createFOAController(audioUrl, getCameraYawRad){
   audioEl.style.display = "none";
   document.body.appendChild(audioEl);
 
-  // Feed multichannel stream into Omnitone
   const src = ctx.createMediaElementSource(audioEl);
   src.connect(r.input);
 
@@ -400,7 +312,10 @@ async function createFOAController(audioUrl, getCameraYawRad){
   async function ensureMetadata(){
     if (audioEl.readyState >= 1) return;
     await new Promise((resolve) => {
-      const onMeta = () => { audioEl.removeEventListener("loadedmetadata", onMeta); resolve(); };
+      const onMeta = () => {
+        audioEl.removeEventListener("loadedmetadata", onMeta);
+        resolve();
+      };
       audioEl.addEventListener("loadedmetadata", onMeta);
       audioEl.load();
     });
@@ -431,7 +346,6 @@ async function createFOAController(audioUrl, getCameraYawRad){
   };
 }
 
-/* ========================= build grid ========================= */
 function buildSampleRow(sample, sampleIdx){
   const row = document.createElement("div");
   row.className = "columns is-multiline is-centered demo-row";
@@ -457,57 +371,113 @@ function buildSampleRow(sample, sampleIdx){
 
     const viewer = document.createElement("div");
     viewer.className = "viewer";
-    viewer.__isPlaying = false; // UI state flag (do not rely on v.paused)
+    viewer.__isPlaying = false;
+    viewer.__sceneInitialized = false;
     colDiv.appendChild(viewer);
 
     const vidId = `vid-${sampleIdx}-${colIdx}`;
 
     viewer.innerHTML = `
-      <a-scene embedded vr-mode-ui="enabled:true">
-        <a-assets>
-          <video id="${vidId}" src="${col.video}"
-                 crossorigin="anonymous"
-                 playsinline webkit-playsinline
-                 preload="metadata"></video>
-        </a-assets>
-        <a-videosphere src="#${vidId}" rotation="0 -90 0"></a-videosphere>
-        <a-camera look-controls="enabled:true"></a-camera>
-      </a-scene>
-
       <div class="overlay-controls">
         <div class="ovbtn" data-role="rew">Rewind</div>
         <div class="ovbtn" data-role="pp">Play</div>
       </div>
     `;
 
-    const v = viewer.querySelector("video");
-    v.muted = true; // avoid mixing any audio track from the webm
-
     const btnRew = viewer.querySelector('[data-role="rew"]');
     const btnPP  = viewer.querySelector('[data-role="pp"]');
-    const sceneEl = viewer.querySelector("a-scene");
 
-    // camera yaw
+    let sceneEl = null;
+    let v = null;
     let camEl = null;
-    function getCameraYawRad(){ return camEl ? camEl.object3D.rotation.y : 0; }
-    sceneEl.addEventListener("loaded", () => {
-      camEl = (sceneEl.camera && sceneEl.camera.el) ? sceneEl.camera.el : sceneEl.querySelector("a-camera");
-    });
+    let sceneReadyPromise = null;
+    let ctrlPromise = null;
+
+    function getCameraYawRad(){
+      return camEl ? camEl.object3D.rotation.y : 0;
+    }
+
+    function ensureScene(){
+      if (sceneReadyPromise) return sceneReadyPromise;
+
+      sceneReadyPromise = new Promise((resolve, reject) => {
+        try{
+          const wrap = document.createElement("div");
+          wrap.innerHTML = `
+            <a-scene embedded vr-mode-ui="enabled:true">
+              <a-assets>
+                <video id="${vidId}" src="${col.video}"
+                       crossorigin="anonymous"
+                       playsinline webkit-playsinline
+                       preload="metadata"></video>
+              </a-assets>
+              <a-videosphere src="#${vidId}" rotation="0 -90 0"></a-videosphere>
+              <a-camera look-controls="enabled:true"></a-camera>
+            </a-scene>
+          `;
+
+          sceneEl = wrap.firstElementChild;
+          viewer.prepend(sceneEl);
+
+          v = sceneEl.querySelector("video");
+          if (v) v.muted = true;
+
+          const onLoaded = () => {
+            camEl = (sceneEl.camera && sceneEl.camera.el)
+              ? sceneEl.camera.el
+              : sceneEl.querySelector("a-camera");
+
+            viewer.__sceneInitialized = true;
+
+            if (v){
+              v.addEventListener("ended", () => {
+                viewer.__isPlaying = false;
+                btnPP.textContent = "Play";
+                try { getCtrl().then(c => c.stop && c.stop()); } catch(e){}
+              });
+
+              v.addEventListener("pause", () => {
+                if (viewer.__isPlaying){
+                  viewer.__isPlaying = false;
+                  btnPP.textContent = "Play";
+                  try { getCtrl().then(c => c.pause && c.pause()); } catch(e){}
+                }
+              });
+            }
+
+            resolve();
+          };
+
+          sceneEl.addEventListener("loaded", onLoaded, { once: true });
+          sceneEl.addEventListener("error", (err) => {
+            sceneReadyPromise = null;
+            reject(err);
+          }, { once: true });
+
+        }catch(err){
+          sceneReadyPromise = null;
+          reject(err);
+        }
+      });
+
+      return sceneReadyPromise;
+    }
 
     async function playVideo(){
+      await ensureScene();
+      if (!v) throw new Error("Video element was not created correctly.");
       v.loop = false;
       await v.play();
     }
 
-    // Lazy controller: only create after user clicks (Chrome autoplay policy)
-    let ctrlPromise = null;
     function getCtrl(){
       if (!ctrlPromise){
         ctrlPromise = (async () => {
           try{
+            await ensureScene();
             return await createFOAController(col.audio, getCameraYawRad);
           }catch(e){
-            ctrlPromise = null; // allow retry
+            ctrlPromise = null;
             throw e;
           }
         })();
@@ -515,55 +485,61 @@ function buildSampleRow(sample, sampleIdx){
       return ctrlPromise;
     }
 
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          ensureScene().catch(showErr);
+          io.unobserve(viewer);
+        }
+      });
+    }, {
+      root: null,
+      rootMargin: "300px 0px",
+      threshold: 0.01
+    });
+
+    io.observe(viewer);
+
     btnPP.addEventListener("pointerdown", async (e) => {
-      e.preventDefault(); e.stopPropagation();
+      e.preventDefault();
+      e.stopPropagation();
       try{
+        await ensureScene();
         const ctrl = await getCtrl();
 
         if (!viewer.__isPlaying){
-          const t = Math.max(0, v.currentTime || 0);
+          const t = Math.max(0, (v && v.currentTime) || 0);
           await ctrl.playFrom(t);
           await playVideo();
-          viewer.__isPlaying = true;
           viewer.__isPlaying = true;
           btnPP.textContent = "Pause";
         } else {
           const t = ctrl.pause();
-          v.pause();
-          if (typeof t === "number" && isFinite(t)) v.currentTime = t;
+          if (v) v.pause();
+          if (v && typeof t === "number" && isFinite(t)) v.currentTime = t;
           viewer.__isPlaying = false;
           btnPP.textContent = "Play";
         }
-      } catch(err){ showErr(err); }
+      } catch(err){
+        showErr(err);
+      }
     });
 
     btnRew.addEventListener("pointerdown", async (e) => {
-      e.preventDefault(); e.stopPropagation();
+      e.preventDefault();
+      e.stopPropagation();
       try{
+        await ensureScene();
         const ctrl = await getCtrl();
-                v.currentTime = 0;
+        if (v) v.currentTime = 0;
         await ctrl.playFrom(0);
         await playVideo();
         viewer.__isPlaying = true;
         btnPP.textContent = "Pause";
-      } catch(err){ showErr(err); }
-    });
-
-    // Keep UI consistent if playback stops outside our buttons
-    v.addEventListener("ended", () => {
-      viewer.__isPlaying = false;
-      btnPP.textContent = "Play";
-      try { getCtrl().then(c => c.stop && c.stop()); } catch(e){}
-    });
-    v.addEventListener("pause", () => {
-      // if user pauses via system / browser UI
-      if (viewer.__isPlaying){
-        viewer.__isPlaying = false;
-        btnPP.textContent = "Play";
-        try { getCtrl().then(c => c.pause && c.pause()); } catch(e){}
+      } catch(err){
+        showErr(err);
       }
     });
-
 
     row.appendChild(colDiv);
   });
@@ -582,7 +558,9 @@ document.addEventListener("DOMContentLoaded", () => {
     MONO_SAMPLES.forEach((s, i) => {
       rootMono.appendChild(buildSampleRow(s, `mono-${i}`));
     });
-  } catch(e){ showErr(e); }
+  } catch(e){
+    showErr(e);
+  }
 });
 </script>
 
