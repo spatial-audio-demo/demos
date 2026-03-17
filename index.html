@@ -37,20 +37,23 @@
     padding-right: 6px;
   }
 
-  .example-row-title{
-    width: 100%;
-    margin: 0 0 10px 0;
-    padding-left: 6px;
-    font-size: 18px;
-    font-weight: 500;
-    color: #2c4a67;
+   .example-label{
+    height: 30px;
+    margin: 0 0 8px 0;
+    font-size: 30px;
+    font-weight: 400;
+    color: #1f3f5b;
     text-align: left;
+    line-height: 1;
   }
   
+  .example-label.placeholder{
+    visibility: hidden;
+  }
   .column-header{
     font-size: 2rem;
     font-weight: 700;
-    margin-bottom: 14px;
+    margin-bottom: 18px;
     color: #222;
   }
 
@@ -203,7 +206,7 @@
     <div class="container is-max-desktop">
 
       <div id="section-yt" class="section-block">
-        <h3 class="title is-3 has-text-centered">Examples from YT-SPEECH Dataset</h3>
+        <h3 class="title is-3 has-text-centered">Qualitative Examples on YT-SPEECH</h3>
         <p class="section-note">
           NOTE: Input is the aligned 360° video with the omnidirectional FOA channel (W).
         </p>
@@ -229,7 +232,7 @@ const VER = "v1";
 
 const YT_SPEECH_SAMPLES = [
   {
-    name: "Example_1",
+    name: "Example #1",
     cols: [
       { title: "Input ", video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_W.wav?" + VER },
       { title: "Ground-Truth",       video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_gt.wav?" + VER },
@@ -237,7 +240,7 @@ const YT_SPEECH_SAMPLES = [
     ],
   },
   {
-    name: "Example_2",
+    name: "Example #2",
     cols: [
       { title: "Input", video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_W.wav?" + VER },
       { title: "Ground-Truth",       video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_gt.wav?" + VER },
@@ -245,7 +248,7 @@ const YT_SPEECH_SAMPLES = [
     ],
   },
   {
-    name: "Example_3",
+    name: "Example #3",
     cols: [
       { title: "Input", video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_W.wav?" + VER },
       { title: "Ground-Truth",       video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_gt.wav?" + VER },
@@ -253,7 +256,7 @@ const YT_SPEECH_SAMPLES = [
     ],
   },
   {
-    name: "Example_4",
+    name: "Example #4",
     cols: [
       { title: "Input", video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_W.wav?" + VER },
       { title: "Ground-Truth",       video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_gt.wav?" + VER },
@@ -264,21 +267,21 @@ const YT_SPEECH_SAMPLES = [
 
 const MONO_SAMPLES = [
   {
-    name: "Mono_Example_1",
+    name: "Mono Example #1",
     cols: [
       { title: "Input", video: "videos/v15.mp4?" + VER, audio: "audios/v15_mono.wav?" + VER },
       { title: "Prediction(Ours)",            video: "videos/v15.mp4?" + VER, audio: "audios/v15_c2_15_pred_0_10_boosted_strong.wav?" + VER },
     ],
   },
   {
-    name: "Mono_Example_2",
+    name: "Mono Example #2",
     cols: [
       { title: "Input", video: "videos/v6.mp4?" + VER, audio: "audios/v6_mono.wav?" + VER },
       { title: "Prediction(Ours)",            video: "videos/v6.mp4?" + VER, audio: "audios/v6_c3_1_pred_0_10_boosted_strong.wav?" + VER },
     ],
   },
   {
-    name: "Mono_Example_3",
+    name: "Mono Example #3",
     cols: [
       { title: "Input", video: "videos/v5.mp4?" + VER, audio: "audios/v5_mono.wav?" + VER },
       { title: "Prediction(Ours)",            video: "videos/v5.mp4?" + VER, audio: "audios/v5_c4_4_pred_0_10_boosted_strong.wav?" + VER },
@@ -293,42 +296,39 @@ function showErr(e){
   box.textContent = (e && e.stack) ? e.stack : String(e);
 }
 
-function buildPlayerUrl(col, sampleName){
-  const p = new URLSearchParams();
-  p.set("video", col.video);
-  p.set("audio", col.audio);
-  p.set("label", `${sampleName} · ${col.title}`);
-  return `demo-player.html?${p.toString()}`;
-}
-
 function buildSampleRow(sample, rowIndex){
-  const wrapper = document.createElement("div");
-
-  const rowTitle = document.createElement("div");
-  rowTitle.className = "example-row-title";
-  rowTitle.textContent = sample.name;
-  wrapper.appendChild(rowTitle);
-
   const row = document.createElement("div");
   row.className = "columns is-multiline is-centered demo-row";
 
   const nCols = sample.cols.length;
   const bulmaWidth = nCols === 2 ? "is-half" : "is-one-third";
 
-  sample.cols.forEach((col) => {
+  sample.cols.forEach((col, colIndex) => {
     const colDiv = document.createElement("div");
     colDiv.className = `column ${bulmaWidth} has-text-centered`;
 
+    // 第一行：显示列标题
     if (rowIndex === 0) {
       const h4 = document.createElement("div");
       h4.className = "column-header";
       h4.textContent = col.title;
       colDiv.appendChild(h4);
     } else {
-      const spacer = document.createElement("div");
-      spacer.style.height = "62px";
-      colDiv.appendChild(spacer);
+      const headerSpacer = document.createElement("div");
+      headerSpacer.style.height = "66px";
+      colDiv.appendChild(headerSpacer);
     }
+
+    // 每一行：只在第一列显示 example 标签，其他列放同高占位
+    const ex = document.createElement("div");
+    ex.className = "example-label";
+    if (colIndex === 0) {
+      ex.textContent = sample.name;
+    } else {
+      ex.classList.add("placeholder");
+      ex.textContent = sample.name;
+    }
+    colDiv.appendChild(ex);
 
     const shell = document.createElement("div");
     shell.className = "player-shell";
@@ -345,8 +345,7 @@ function buildSampleRow(sample, rowIndex){
     row.appendChild(colDiv);
   });
 
-  wrapper.appendChild(row);
-  return wrapper;
+  return row;
 }
 
 function renderSection(rootEl, samples){
