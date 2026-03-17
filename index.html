@@ -37,22 +37,20 @@
     padding-right: 6px;
   }
 
-  .example-tag{
-    display: inline-block;
-    margin-bottom: 10px;
-    padding: 4px 12px;
-    border-radius: 999px;
-    background: #f4f4f4;
-    border: 1px solid #dddddd;
-    font-weight: 700;
-    font-size: 14px;
-    letter-spacing: 0.2px;
+  .example-row-title{
+    width: 100%;
+    margin: 0 0 10px 0;
+    padding-left: 6px;
+    font-size: 18px;
+    font-weight: 500;
+    color: #2c4a67;
+    text-align: left;
   }
-
+  
   .column-header{
     font-size: 2rem;
     font-weight: 700;
-    margin-bottom: 10px;
+    margin-bottom: 14px;
     color: #222;
   }
 
@@ -115,13 +113,13 @@
     display: none !important;
   }
 
-  .section-note{
+   .section-note{
     max-width: 900px;
-    margin: -6px auto 22px auto;
+    margin: -6px auto 18px auto;
     text-align: center;
     color: #555;
     font-size: 15px;
-    line-height: 1.55;
+    line-height: 1.45;
   }
 
   #errbox{
@@ -194,7 +192,7 @@
 
       <div class="toggle-wrap">
         <button id="btn-yt" class="toggle-btn">Show YT-SPEECH Examples</button>
-        <button id="btn-mono" class="toggle-btn is-light">Show Mono Recordings</button>
+        <button id="btn-mono" class="toggle-btn is-light">Show Mono Recordings Examples</button>
       </div>
     </div>
   </div>
@@ -216,7 +214,7 @@
         <h3 class="title is-3 has-text-centered" style="margin-top: 8px;">Generalization to Real Mono Recordings</h3>
         <!-- <p class="has-text-centered" style="margin-top:-8px; margin-bottom:18px; color:#666;"> -->
         <p class="section-note">
-          NOTE: Generalization to real mono recordings with unknown FOA.
+          NOTE: Ground-truth FOA is unavailable for these real mono recordings.
         </p>
         <div id="demo-root-mono"></div>
       </div>
@@ -234,7 +232,7 @@ const YT_SPEECH_SAMPLES = [
     name: "Example_1",
     cols: [
       { title: "Input ", video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_W.wav?" + VER },
-      { title: "Ground Truth",       video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_gt.wav?" + VER },
+      { title: "Ground-Truth",       video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_gt.wav?" + VER },
       { title: "Prediction (Ours)",   video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_pred.wav?" + VER },
     ],
   },
@@ -242,7 +240,7 @@ const YT_SPEECH_SAMPLES = [
     name: "Example_2",
     cols: [
       { title: "Input", video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_W.wav?" + VER },
-      { title: "Ground Truth",       video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_gt.wav?" + VER },
+      { title: "Ground-Truth",       video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_gt.wav?" + VER },
       { title: "Prediction(Ours)",   video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_pred.wav?" + VER },
     ],
   },
@@ -250,7 +248,7 @@ const YT_SPEECH_SAMPLES = [
     name: "Example_3",
     cols: [
       { title: "Input", video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_W.wav?" + VER },
-      { title: "Ground Truth",       video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_gt.wav?" + VER },
+      { title: "Ground-Truth",       video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_gt.wav?" + VER },
       { title: "Prediction(Ours)",   video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_pred.wav?" + VER },
     ],
   },
@@ -258,7 +256,7 @@ const YT_SPEECH_SAMPLES = [
     name: "Example_4",
     cols: [
       { title: "Input", video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_W.wav?" + VER },
-      { title: "Ground Truth",       video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_gt.wav?" + VER },
+      { title: "Ground-Truth",       video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_gt.wav?" + VER },
       { title: "Prediction(Ours)",   video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_pred.wav?" + VER },
     ],
   }
@@ -304,13 +302,20 @@ function buildPlayerUrl(col, sampleName){
 }
 
 function buildSampleRow(sample, rowIndex){
+  const wrapper = document.createElement("div");
+
+  const rowTitle = document.createElement("div");
+  rowTitle.className = "example-row-title";
+  rowTitle.textContent = sample.name;
+  wrapper.appendChild(rowTitle);
+
   const row = document.createElement("div");
   row.className = "columns is-multiline is-centered demo-row";
 
   const nCols = sample.cols.length;
   const bulmaWidth = nCols === 2 ? "is-half" : "is-one-third";
 
-  sample.cols.forEach((col, colIndex) => {
+  sample.cols.forEach((col) => {
     const colDiv = document.createElement("div");
     colDiv.className = `column ${bulmaWidth} has-text-centered`;
 
@@ -319,17 +324,9 @@ function buildSampleRow(sample, rowIndex){
       h4.className = "column-header";
       h4.textContent = col.title;
       colDiv.appendChild(h4);
-    }
-
-    if (colIndex === 0) {
-      const ex = document.createElement("div");
-      ex.className = "example-tag";
-      ex.textContent = sample.name;
-      colDiv.appendChild(ex);
-    } else if (rowIndex !== 0) {
+    } else {
       const spacer = document.createElement("div");
-      spacer.style.height = "36px";
-      spacer.style.marginBottom = "10px";
+      spacer.style.height = "62px";
       colDiv.appendChild(spacer);
     }
 
@@ -348,7 +345,8 @@ function buildSampleRow(sample, rowIndex){
     row.appendChild(colDiv);
   });
 
-  return row;
+  wrapper.appendChild(row);
+  return wrapper;
 }
 
 function renderSection(rootEl, samples){
