@@ -12,102 +12,130 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
 
-  <style>
-    :root{
-      --maxw: 1180px;
-      --radius: 14px;
-    }
+<style>
+  :root{
+    --maxw: 1180px;
+    --radius: 14px;
+  }
 
-    body{
-      font-family: "Google Sans","Noto Sans",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    }
+  body{
+    font-family: "Google Sans","Noto Sans",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  }
 
-    .container.is-max-desktop{
-      max-width: var(--maxw) !important;
-    }
+  .container.is-max-desktop{
+    max-width: var(--maxw) !important;
+  }
 
-    .demo-row{
-      margin-left: -6px;
-      margin-right: -6px;
-      margin-bottom: 10px;
-    }
+  .demo-row{
+    margin-left: -6px;
+    margin-right: -6px;
+    margin-bottom: 18px;
+  }
 
-    .demo-row > .column{
-      padding-left: 6px;
-      padding-right: 6px;
-    }
+  .demo-row > .column{
+    padding-left: 6px;
+    padding-right: 6px;
+  }
 
-    .sample-label{
-      font-weight: 700;
-      margin-bottom: 8px;
-      text-align: left;
-    }
+  .example-tag{
+    display: inline-block;
+    margin-bottom: 10px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: #f4f4f4;
+    border: 1px solid #dddddd;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.2px;
+  }
 
-    .player-shell{
-      width: 100%;
-      max-width: 420px;
-      aspect-ratio: 2 / 1;
-      margin: 0 auto;
-      border-radius: var(--radius);
-      overflow: hidden;
-      background: #f3f3f3;
-      box-shadow: 0 1px 0 rgba(0,0,0,0.04);
-      border: 1px solid #ececec;
-    }
+  .column-header{
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: #222;
+  }
 
-    .player-frame{
-      width: 100%;
-      height: 100%;
-      border: 0;
-      display: block;
-      background: #f3f3f3;
-    }
+  .player-shell{
+    width: 100%;
+    max-width: 420px;
+    aspect-ratio: 2 / 1;
+    margin: 0 auto;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #f3f3f3;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+    border: 1px solid #ececec;
+  }
 
-    .toggle-wrap{
-      display: flex;
-      justify-content: center;
-      gap: 14px;
-      flex-wrap: wrap;
-      margin-top: 18px;
-      margin-bottom: 26px;
-    }
+  .player-frame{
+    width: 100%;
+    height: 100%;
+    border: 0;
+    display: block;
+    background: #f3f3f3;
+  }
 
-    .toggle-btn{
-      background: #222;
-      color: #fff;
-      border: 0;
-      border-radius: 999px;
-      padding: 12px 20px;
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 15px;
-    }
+  .toggle-wrap{
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+    margin-bottom: 26px;
+  }
 
-    .toggle-btn.is-light{
-      background: #efefef;
-      color: #222;
-    }
+  .toggle-btn{
+    background: #ffffff;
+    color: #222;
+    border: 2px solid #222;
+    border-radius: 999px;
+    padding: 12px 20px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 15px;
+    transition: all 0.18s ease;
+  }
 
-    .section-block{
-      margin-top: 20px;
-    }
+  .toggle-btn:hover{
+    background: #f3f3f3;
+  }
 
-    .section-block[hidden]{
-      display: none !important;
-    }
+  .toggle-btn.active{
+    background: #222;
+    color: #fff;
+    border-color: #222;
+  }
 
-    #errbox{
-      display:none;
-      margin-top: 12px;
-      background:#ffecec;
-      border:1px solid #ffb3b3;
-      color:#7a0000;
-      padding: 12px;
-      border-radius: 12px;
-      font-size: 13px;
-      white-space: pre-wrap;
-    }
-  </style>
+  .section-block{
+    margin-top: 20px;
+  }
+
+  .section-block[hidden]{
+    display: none !important;
+  }
+
+  .section-note{
+    max-width: 900px;
+    margin: -6px auto 22px auto;
+    text-align: center;
+    color: #555;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  #errbox{
+    display:none;
+    margin-top: 12px;
+    background:#ffecec;
+    border:1px solid #ffb3b3;
+    color:#7a0000;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    white-space: pre-wrap;
+  }
+</style>
 </head>
 
 <body>
@@ -165,7 +193,7 @@
       </ul>
 
       <div class="toggle-wrap">
-        <button id="btn-yt" class="toggle-btn">Show YT-SPEECH Samples</button>
+        <button id="btn-yt" class="toggle-btn">Show YT-SPEECH Examples</button>
         <button id="btn-mono" class="toggle-btn is-light">Show Mono Recordings</button>
       </div>
     </div>
@@ -177,14 +205,18 @@
     <div class="container is-max-desktop">
 
       <div id="section-yt" class="section-block">
-        <h3 class="title is-3 has-text-centered">Samples from YT-SPEECH Dataset</h3>
+        <h3 class="title is-3 has-text-centered">Examples from YT-SPEECH Dataset</h3>
+        <p class="section-note">
+          NOTE: Input is the aligned 360° video with the omnidirectional FOA channel (W).
+        </p>
         <div id="demo-root-yt"></div>
       </div>
 
       <div id="section-mono" class="section-block" hidden>
-        <h3 class="title is-3 has-text-centered" style="margin-top: 8px;">Mono Recordings</h3>
-        <p class="has-text-centered" style="margin-top:-8px; margin-bottom:18px; color:#666;">
-          Generalization to real mono recordings with unknown FOA.
+        <h3 class="title is-3 has-text-centered" style="margin-top: 8px;">Generalization to Real Mono Recordings</h3>
+        <!-- <p class="has-text-centered" style="margin-top:-8px; margin-bottom:18px; color:#666;"> -->
+        <p class="section-note">
+          NOTE: Generalization to real mono recordings with unknown FOA.
         </p>
         <div id="demo-root-mono"></div>
       </div>
@@ -199,59 +231,59 @@ const VER = "v1";
 
 const YT_SPEECH_SAMPLES = [
   {
-    name: "Samples_1",
+    name: "Example_1",
     cols: [
-      { title: "Input", video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_W.wav?" + VER },
-      { title: "GT",    video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_gt.wav?" + VER },
-      { title: "Ours",  video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_pred.wav?" + VER },
+      { title: "Input ", video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_W.wav?" + VER },
+      { title: "Ground Truth",       video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_gt.wav?" + VER },
+      { title: "Prediction (Ours)",   video: "videos/KFBk21Mb8G4_21.webm?" + VER, audio: "audios/KFBk21Mb8G4_21_pred.wav?" + VER },
     ],
   },
   {
-    name: "Samples_2",
+    name: "Example_2",
     cols: [
       { title: "Input", video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_W.wav?" + VER },
-      { title: "GT",    video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_gt.wav?" + VER },
-      { title: "Ours",  video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_pred.wav?" + VER },
+      { title: "Ground Truth",       video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_gt.wav?" + VER },
+      { title: "Prediction(Ours)",   video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_pred.wav?" + VER },
     ],
   },
   {
-    name: "Samples_3",
+    name: "Example_3",
     cols: [
       { title: "Input", video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_W.wav?" + VER },
-      { title: "GT",    video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_gt.wav?" + VER },
-      { title: "Ours",  video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_pred.wav?" + VER },
+      { title: "Ground Truth",       video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_gt.wav?" + VER },
+      { title: "Prediction(Ours)",   video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_pred.wav?" + VER },
     ],
   },
   {
-    name: "Samples_4",
+    name: "Example_4",
     cols: [
       { title: "Input", video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_W.wav?" + VER },
-      { title: "GT",    video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_gt.wav?" + VER },
-      { title: "Ours",  video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_pred.wav?" + VER },
+      { title: "Ground Truth",       video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_gt.wav?" + VER },
+      { title: "Prediction(Ours)",   video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_pred.wav?" + VER },
     ],
   }
 ];
 
 const MONO_SAMPLES = [
   {
-    name: "Mono 1",
+    name: "Mono_Example_1",
     cols: [
       { title: "Input", video: "videos/v15.mp4?" + VER, audio: "audios/v15_mono.wav?" + VER },
-      { title: "Ours",  video: "videos/v15.mp4?" + VER, audio: "audios/v15_c2_15_pred_0_10_boosted_strong.wav?" + VER },
+      { title: "Prediction(Ours)",            video: "videos/v15.mp4?" + VER, audio: "audios/v15_c2_15_pred_0_10_boosted_strong.wav?" + VER },
     ],
   },
   {
-    name: "Mono 2",
+    name: "Mono_Example_2",
     cols: [
       { title: "Input", video: "videos/v6.mp4?" + VER, audio: "audios/v6_mono.wav?" + VER },
-      { title: "Ours",  video: "videos/v6.mp4?" + VER, audio: "audios/v6_c3_1_pred_0_10_boosted_strong.wav?" + VER },
+      { title: "Prediction(Ours)",            video: "videos/v6.mp4?" + VER, audio: "audios/v6_c3_1_pred_0_10_boosted_strong.wav?" + VER },
     ],
   },
   {
-    name: "Mono 3",
+    name: "Mono_Example_3",
     cols: [
       { title: "Input", video: "videos/v5.mp4?" + VER, audio: "audios/v5_mono.wav?" + VER },
-      { title: "Ours",  video: "videos/v5.mp4?" + VER, audio: "audios/v5_c4_4_pred_0_10_boosted_strong.wav?" + VER },
+      { title: "Prediction(Ours)",            video: "videos/v5.mp4?" + VER, audio: "audios/v5_c4_4_pred_0_10_boosted_strong.wav?" + VER },
     ],
   }
 ];
@@ -271,26 +303,35 @@ function buildPlayerUrl(col, sampleName){
   return `demo-player.html?${p.toString()}`;
 }
 
-function buildSampleRow(sample){
+function buildSampleRow(sample, rowIndex){
   const row = document.createElement("div");
   row.className = "columns is-multiline is-centered demo-row";
 
   const nCols = sample.cols.length;
   const bulmaWidth = nCols === 2 ? "is-half" : "is-one-third";
 
-  sample.cols.forEach((col) => {
+  sample.cols.forEach((col, colIndex) => {
     const colDiv = document.createElement("div");
     colDiv.className = `column ${bulmaWidth} has-text-centered`;
 
-    const h4 = document.createElement("h4");
-    h4.className = "title is-4";
-    h4.textContent = col.title;
-    colDiv.appendChild(h4);
+    if (rowIndex === 0) {
+      const h4 = document.createElement("div");
+      h4.className = "column-header";
+      h4.textContent = col.title;
+      colDiv.appendChild(h4);
+    }
 
-    const label = document.createElement("p");
-    label.className = "sample-label";
-    label.textContent = `${sample.name} · ${col.title}`;
-    colDiv.appendChild(label);
+    if (colIndex === 0) {
+      const ex = document.createElement("div");
+      ex.className = "example-tag";
+      ex.textContent = sample.name;
+      colDiv.appendChild(ex);
+    } else if (rowIndex !== 0) {
+      const spacer = document.createElement("div");
+      spacer.style.height = "36px";
+      spacer.style.marginBottom = "10px";
+      colDiv.appendChild(spacer);
+    }
 
     const shell = document.createElement("div");
     shell.className = "player-shell";
@@ -312,7 +353,7 @@ function buildSampleRow(sample){
 
 function renderSection(rootEl, samples){
   rootEl.innerHTML = "";
-  samples.forEach((s) => rootEl.appendChild(buildSampleRow(s)));
+  samples.forEach((s, i) => rootEl.appendChild(buildSampleRow(s, i)));
 }
 
 function clearSection(rootEl){
@@ -323,13 +364,11 @@ function setActiveButton(activeId){
   const btnYT = document.getElementById("btn-yt");
   const btnMono = document.getElementById("btn-mono");
 
-  if (activeId === "yt"){
-    btnYT.classList.remove("is-light");
-    btnMono.classList.add("is-light");
-  } else {
-    btnMono.classList.remove("is-light");
-    btnYT.classList.add("is-light");
-  }
+  btnYT.classList.remove("active");
+  btnMono.classList.remove("active");
+
+  if (activeId === "yt") btnYT.classList.add("active");
+  if (activeId === "mono") btnMono.classList.add("active");
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -343,6 +382,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     renderSection(rootYT, YT_SPEECH_SAMPLES);
     clearSection(rootMono);
+    setActiveButton("yt");
 
     btnYT.addEventListener("click", () => {
       sectionYT.hidden = false;
