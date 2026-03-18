@@ -29,7 +29,7 @@
   .demo-row{
     margin-left: -6px;
     margin-right: -6px;
-    margin-bottom: 18px;
+    margin-bottom: 8px;
   }
 
   .demo-row > .column{
@@ -38,9 +38,9 @@
   }
 
   .example-label{
-    height: 24px;
-    margin: 0 0 8px 0;
-    font-size: 16px;
+    height: 28px;
+    margin: 0 0 6px 0;
+    font-size: 20px;
     font-weight: 500;
     color: #355c7d;
     text-align: left;
@@ -110,7 +110,7 @@
   }
 
   .section-block{
-    margin-top: 20px;
+    margin-top: 10px;
   }
 
   .section-block[hidden]{
@@ -119,11 +119,11 @@
 
    .section-note{
     max-width: 900px;
-    margin: -6px auto 18px auto;
+    margin: -10px auto 8px auto;
     text-align: center;
     color: #555;
     font-size: 15px;
-    line-height: 1.45;
+    line-height: 1.35;
   }
 
   #errbox{
@@ -191,7 +191,7 @@
       <ul class="is-size-5" style="display:inline-block; text-align:left; list-style: disc; padding-left: 1.5em;">
         <li>Please use your headphones 🎧 for the best audio experience.</li>
         <li>Please feel free to drag the screen to experience the 360-degree audio 🎥</li>
-        <li>Please use Play to start/pause the spatial audio; Rewind to restart.</li>
+        <li>Please use <strong>Play</strong> to start/pause the spatial audio; <strong>Rewind</strong> to restart.</li>
       </ul>
 
       <div class="toggle-wrap">
@@ -303,6 +303,7 @@ function buildPlayerUrl(col, sampleName){
   p.set("label", `${sampleName} · ${col.title}`);
   return `demo-player.html?${p.toString()}`;
 }
+  
 function buildSampleRow(sample, rowIndex){
   const row = document.createElement("div");
   row.className = "columns is-multiline is-centered demo-row";
@@ -314,7 +315,6 @@ function buildSampleRow(sample, rowIndex){
     const colDiv = document.createElement("div");
     colDiv.className = `column ${bulmaWidth} has-text-centered`;
 
-    // 第一行：显示列标题
     if (rowIndex === 0) {
       const h4 = document.createElement("div");
       h4.className = "column-header";
@@ -322,11 +322,10 @@ function buildSampleRow(sample, rowIndex){
       colDiv.appendChild(h4);
     } else {
       const headerSpacer = document.createElement("div");
-      headerSpacer.style.height = "56px";
+      headerSpacer.style.height = "52px";
       colDiv.appendChild(headerSpacer);
     }
 
-    // 每一行：只在第一列显示 example 标签，其他列放同高占位
     const ex = document.createElement("div");
     ex.className = "example-label";
     if (colIndex === 0) {
@@ -339,6 +338,12 @@ function buildSampleRow(sample, rowIndex){
 
     const shell = document.createElement("div");
     shell.className = "player-shell";
+
+    if (nCols === 2) {
+      shell.style.margin = "0";
+      shell.style.marginLeft = "0";
+      shell.style.marginRight = "auto";
+    }
 
     const iframe = document.createElement("iframe");
     iframe.className = "player-frame";
