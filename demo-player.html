@@ -260,7 +260,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const vidId = "player-video";
     const wrap = document.createElement("div");
     wrap.innerHTML = `
-      <a-scene embedded vr-mode-ui="enabled:true">
+      <a-scene embedded vr-mode-ui="enabled:false">
         <a-assets>
           <video id="${vidId}" src="${video}"
                  crossorigin="anonymous"
