@@ -195,7 +195,7 @@
 
       <div class="toggle-wrap">
         <button id="btn-yt" class="toggle-btn">Show YT-SPEECH Examples</button>
-        <button id="btn-mono" class="toggle-btn is-light">Show Mono Recordings Examples</button>
+        <button id="btn-mono" class="toggle-btn">Show Mono Recording Examples</button>
       </div>
     </div>
   </div>
@@ -244,7 +244,7 @@ const YT_SPEECH_SAMPLES = [
     cols: [
       { title: "Input", video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_W.wav?" + VER },
       { title: "Ground-Truth",       video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_gt.wav?" + VER },
-      { title: "Prediction(Ours)",   video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_pred.wav?" + VER },
+      { title: "Prediction (Ours)",   video: "videos/ibIbvtJMdkc_587.webm?" + VER, audio: "audios/ibIbvtJMdkc_587_pred.wav?" + VER },
     ],
   },
   {
@@ -252,7 +252,7 @@ const YT_SPEECH_SAMPLES = [
     cols: [
       { title: "Input", video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_W.wav?" + VER },
       { title: "Ground-Truth",       video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_gt.wav?" + VER },
-      { title: "Prediction(Ours)",   video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_pred.wav?" + VER },
+      { title: "Prediction (Ours)",   video: "videos/CsyKQPtO9Ig_26.webm?" + VER, audio: "audios/CsyKQPtO9Ig_26_pred.wav?" + VER },
     ],
   },
   {
@@ -260,7 +260,7 @@ const YT_SPEECH_SAMPLES = [
     cols: [
       { title: "Input", video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_W.wav?" + VER },
       { title: "Ground-Truth",       video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_gt.wav?" + VER },
-      { title: "Prediction(Ours)",   video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_pred.wav?" + VER },
+      { title: "Prediction (Ours)",   video: "videos/jlmyMyjd_mo_165.webm?" + VER, audio: "audios/jlmyMyjd_mo_165_pred.wav?" + VER },
     ],
   }
 ];
@@ -270,21 +270,21 @@ const MONO_SAMPLES = [
     name: "Mono Example #1",
     cols: [
       { title: "Input", video: "videos/v15.mp4?" + VER, audio: "audios/v15_mono.wav?" + VER },
-      { title: "Prediction(Ours)",            video: "videos/v15.mp4?" + VER, audio: "audios/v15_c2_15_pred_0_10_boosted_strong.wav?" + VER },
+      { title: "Prediction (Ours)",            video: "videos/v15.mp4?" + VER, audio: "audios/v15_c2_15_pred_0_10_boosted_strong.wav?" + VER },
     ],
   },
   {
     name: "Mono Example #2",
     cols: [
       { title: "Input", video: "videos/v6.mp4?" + VER, audio: "audios/v6_mono.wav?" + VER },
-      { title: "Prediction(Ours)",            video: "videos/v6.mp4?" + VER, audio: "audios/v6_c3_1_pred_0_10_boosted_strong.wav?" + VER },
+      { title: "Prediction (Ours)",            video: "videos/v6.mp4?" + VER, audio: "audios/v6_c3_1_pred_0_10_boosted_strong.wav?" + VER },
     ],
   },
   {
     name: "Mono Example #3",
     cols: [
       { title: "Input", video: "videos/v5.mp4?" + VER, audio: "audios/v5_mono.wav?" + VER },
-      { title: "Prediction(Ours)",            video: "videos/v5.mp4?" + VER, audio: "audios/v5_c4_4_pred_0_10_boosted_strong.wav?" + VER },
+      { title: "Prediction (Ours)",            video: "videos/v5.mp4?" + VER, audio: "audios/v5_c4_4_pred_0_10_boosted_strong.wav?" + VER },
     ],
   }
 ];
@@ -295,7 +295,13 @@ function showErr(e){
   box.style.display = "block";
   box.textContent = (e && e.stack) ? e.stack : String(e);
 }
-
+function buildPlayerUrl(col, sampleName){
+  const p = new URLSearchParams();
+  p.set("video", col.video);
+  p.set("audio", col.audio);
+  p.set("label", `${sampleName} · ${col.title}`);
+  return `demo-player.html?${p.toString()}`;
+}
 function buildSampleRow(sample, rowIndex){
   const row = document.createElement("div");
   row.className = "columns is-multiline is-centered demo-row";
