@@ -329,37 +329,37 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
 
-    btnPP.addEventListener("click", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      try{
-        if (!isPlaying){
-          const t = Math.max(0, v.currentTime || 0);
-          await ctrl.playFrom(t);
-          await playVideo();
-          isPlaying = true;
-          btnPP.textContent = "Pause";
-        } else {
-          v.pause();
-        }
-      } catch(err){
-        showErr(err);
-      }
-    });
-
-    btnRew.addEventListener("click", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      try{
-        v.currentTime = 0;
-        await ctrl.playFrom(0);
+  btnPP.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try{
+      if (!isPlaying){
+        const t = Math.max(0, v.currentTime || 0);
+        await ctrl.playFrom(t);
         await playVideo();
         isPlaying = true;
         btnPP.textContent = "Pause";
-      } catch(err){
-        showErr(err);
+      } else {
+        v.pause();
       }
-    });
+    } catch(err){
+      showErr(err);
+    }
+  });
+  
+  btnRew.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try{
+      v.currentTime = 0;
+      await ctrl.playFrom(0);
+      await playVideo();
+      isPlaying = true;
+      btnPP.textContent = "Pause";
+    } catch(err){
+      showErr(err);
+    }
+  });
 
     btnFS.addEventListener("click", async () => {
       try{
