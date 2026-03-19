@@ -65,23 +65,23 @@
       transform: translateY(1px);
     }
 
-  .fs-btn{
-    position: absolute;
-    right: 12px;
-    bottom: 12px;
-    z-index: 999999;
-    width: 44px;
-    height: 34px;
-    border-radius: 10px;
-    background: rgba(0,0,0,0.55);
-    border: 2px solid rgba(255,255,255,0.78);
-    color: #fff;
-    cursor: pointer;
-    display: grid;
-    place-items: center;
-    font-size: 18px;
-    line-height: 1;
-  }
+    .fs-btn{
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      z-index: 999999;
+      width: 44px;
+      height: 34px;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.55);
+      border: 2px solid rgba(255,255,255,0.78);
+      color: #fff;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      line-height: 1;
+    }
 
     #loading{
       position: absolute;
@@ -112,6 +112,7 @@
       max-height: 45%;
       overflow: auto;
     }
+
     .a-enter-vr,
     .a-enter-ar,
     .a-orientation-modal,
@@ -121,7 +122,6 @@
       display: none !important;
     }
     
-    /* 防止 iframe 内别的右下角按钮露出来 */
     #viewer .a-enter-vr-button,
     #viewer .a-enter-vr,
     #viewer [class*="fullscreen"]:not(#btn-fs),
@@ -329,7 +329,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
 
-    btnPP.addEventListener("pointerdown", async (e) => {
+    btnPP.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
       try{
@@ -340,18 +340,14 @@ document.addEventListener("DOMContentLoaded", async () => {
           isPlaying = true;
           btnPP.textContent = "Pause";
         } else {
-          const t = ctrl.pause();
           v.pause();
-          if (typeof t === "number" && isFinite(t)) v.currentTime = t;
-          isPlaying = false;
-          btnPP.textContent = "Play";
         }
       } catch(err){
         showErr(err);
       }
     });
 
-    btnRew.addEventListener("pointerdown", async (e) => {
+    btnRew.addEventListener("click", async (e) => {
       e.preventDefault();
       e.stopPropagation();
       try{
