@@ -148,6 +148,37 @@
     font-size: 13px;
     white-space: pre-wrap;
   }
+
+  .citation-section{
+    padding-top: 3rem;
+    padding-bottom: 3rem;
+  }
+
+  .citation-copy{
+    color: #4a4a4a;
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+  }
+
+  .citation-links{
+    margin-bottom: 1.75rem;
+  }
+
+  .bibtex-title{
+    margin-bottom: 0.75rem !important;
+  }
+
+  .bibtex-block{
+    margin: 0;
+    padding: 1.25rem 1.4rem;
+    overflow-x: auto;
+    border-radius: 4px;
+    background: #eeeeee;
+    color: #363636;
+    font-size: 0.86rem;
+    line-height: 1.5;
+    white-space: pre;
+  }
 </style>
 </head>
 
@@ -428,6 +459,37 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 </script>
+
+<section class="section citation-section" id="citation">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-10">
+        <h2 class="title is-3">Citation</h2>
+        <p class="citation-copy">
+          Qingyu Luo, Peng Zhang, Wenwu Wang, and Philip J.B. Jackson. “Visually-Guided Spatial Audio Generation for 360° In-the-Wild Speech Scenes.” In <em>Proc. Interspeech 2026</em>, pp. 2937–2941. DOI: <a href="https://doi.org/10.21437/Interspeech.2026-2577" target="_blank" rel="noopener noreferrer">10.21437/Interspeech.2026-2577</a>.
+        </p>
+        <p class="citation-links">
+          <a href="https://www.isca-archive.org/interspeech_2026/luo26b_interspeech.html" target="_blank" rel="noopener noreferrer">ISCA Archive</a>
+          &nbsp;·&nbsp;
+          <a href="https://www.isca-archive.org/interspeech_2026/luo26b_interspeech.pdf" target="_blank" rel="noopener noreferrer">PDF</a>
+          &nbsp;·&nbsp;
+          <a href="https://arxiv.org/abs/2608.24579" target="_blank" rel="noopener noreferrer">arXiv</a>
+        </p>
+
+        <h3 class="title is-4 bibtex-title">BibTeX</h3>
+        <pre class="bibtex-block"><code>@inproceedings{luo26b_interspeech,
+  title     = {{Visually-Guided Spatial Audio Generation for 360° In-the-Wild Speech Scenes}},
+  author    = {Qingyu Luo and Peng Zhang and Wenwu Wang and Philip J.B. Jackson},
+  year      = {2026},
+  booktitle = {{Interspeech 2026}},
+  pages     = {2937--2941},
+  doi       = {10.21437/Interspeech.2026-2577},
+  issn      = {2958-1796},
+}</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
   
 <footer class="footer" style="padding-top: 2rem; padding-bottom: 2rem;">
   <div class="container">
